@@ -46,6 +46,7 @@ export default async function (
       "role(/.*)?",
       "post(/.*)?",
       "wechat.*",
+      "wework.*",
       "youzan.*"
     ].some(pattern => {
       return req.path.match(`^/${pattern}$`);

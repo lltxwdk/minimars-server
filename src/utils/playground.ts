@@ -7,6 +7,7 @@ import UserModel, { User } from "../models/User";
 import agenda from "./agenda";
 import Pospal from "./pospal";
 import { getQrcode } from "./wechat";
+import { getApprovalDetail } from "./wework";
 import {
   getTrade,
   searchTrade,
@@ -99,6 +100,8 @@ export default async function playground() {
     //   console.log("\n");
     //   start.add(1, "quarter");
     // }
+    // const approval = await getApprovalDetail("202107170041");
+    // console.log(JSON.stringify(approval));
   } catch (e) {
     console.error(e);
   }

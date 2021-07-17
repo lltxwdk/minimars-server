@@ -27,6 +27,7 @@ import VisoRouter from "./VisoRouter";
 import YouzanRouter from "./YouzanRouter";
 import { Permission } from "../models/Role";
 import RoleRouter from "./RoleRouter";
+import WeworkRouter from "./WeworkRouter";
 
 export default (app: Express, router: Router) => {
   // register routes
@@ -48,6 +49,7 @@ export default (app: Express, router: Router) => {
     UserRouter,
     VisoRouter,
     WechatRouter,
+    WeworkRouter,
     YouzanRouter
   ].forEach(R => {
     router = R(router);
