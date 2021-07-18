@@ -7,7 +7,7 @@ import StoreModel, { Store } from "../models/Store";
 import { StoreQuery, StorePostBody, StorePutBody } from "./interfaces";
 import { DocumentType } from "@typegoose/typegoose";
 import { Permission } from "../models/Role";
-import Pospal from "../utils/pospal";
+import Pospal, { ProductInCustomerMenu } from "../utils/pospal";
 
 export default (router: Router) => {
   // Store CURD
@@ -160,7 +160,20 @@ export default (router: Router) => {
           store.foodMenu = menu;
           await store.save();
         }
-        const menu = store.foodMenu;
+        const menu = store.foodMenu.filter(cat => {
+          cat.products = cat.products
+            .filter(p => p.sellPrice > 0 && p.stock > 0)
+            .map(p => ({
+              uid: p.uid,
+              categoryUid: p.categoryUid,
+              name: p.name,
+              imageUrl: p.imageUrl,
+              description: p.description,
+              sellPrice: p.sellPrice,
+              stock: p.stock
+            }));
+          return cat.products.length;
+        });
         const storeObject = store.toJSON();
         delete storeObject.foodMenu;
         res.json({

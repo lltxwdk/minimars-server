@@ -100,9 +100,20 @@ interface Product {
   attribute4: string;
 }
 
-export type ProductWithImage = Product & Partial<ProductImage>;
+type ProductWithImage = Product &
+  Pick<ProductImage, "imageUrl" | "productBarcode">;
 
-export type Menu = (Category & { products: ProductWithImage[] })[];
+export interface ProductInCustomerMenu {
+  uid: string;
+  categoryUid: number;
+  name: string;
+  imageUrl: string;
+  sellPrice: number;
+  stock: number;
+  description: string;
+}
+
+export type Menu = (Category & { products: ProductInCustomerMenu[] })[];
 
 export default class Pospal {
   api: AxiosInstance;
@@ -436,12 +447,17 @@ export default class Pospal {
       products: [] as ProductWithImage[]
     }));
     menu.forEach(cat => {
-      cat.products = products.filter(p => p.categoryUid.toString() === cat.uid);
-      cat.products.forEach(p => {
+      const catProducts = products.filter(
+        p => p.categoryUid.toString() === cat.uid
+      );
+      cat.products = catProducts.map(p => {
         const pi = productImages.find(pi => pi.productUid === p.uid);
-        if (!pi) return;
-        p.imageUrl = pi.imageUrl;
-        p.barcode = pi.productBarcode;
+        if (!pi) throw new Error("product_image_not_found");
+        const pn = Object.assign({}, p, {
+          imageUrl: pi.imageUrl,
+          productBarcode: pi.productBarcode
+        });
+        return pn;
       });
     });
     this.menu = menu;

@@ -21,7 +21,7 @@ import { Coupon } from "./Coupon";
 import { sendTemplateMessage, TemplateMessageType } from "../utils/wechat";
 import CardTypeModel from "./CardType";
 import HttpError from "../utils/HttpError";
-import { ProductWithImage } from "../utils/pospal";
+import { ProductInCustomerMenu } from "../utils/pospal";
 
 const { DEBUG } = process.env;
 
@@ -403,7 +403,7 @@ export class Booking {
       if (!menu) throw new Error("food_menu_missing");
       const products = menu.reduce(
         (products, category) => products.concat(category.products),
-        [] as ProductWithImage[]
+        [] as ProductInCustomerMenu[]
       );
       if (this.items) {
         for (const item of this.items) {
