@@ -16,6 +16,10 @@ import { Store } from "./Store";
 import PaymentModel, { PaymentGateway, Payment, Scene } from "./Payment";
 import autoPopulate from "./plugins/autoPopulate";
 import HttpError from "../utils/HttpError";
+import {
+  appendResizeImageUrl,
+  removeResizeImageUrl
+} from "../utils/imageResize";
 
 const { DEBUG } = process.env;
 
@@ -162,10 +166,16 @@ export class Card {
   @prop({ type: Boolean })
   isContract?: boolean;
 
-  @prop()
+  @prop({
+    get: v => appendResizeImageUrl(v),
+    set: v => removeResizeImageUrl(v)
+  })
   posterUrl?: string;
 
-  @prop()
+  @prop({
+    get: v => appendResizeImageUrl(v),
+    set: v => removeResizeImageUrl(v)
+  })
   posterDenseUrl?: string;
 
   @prop()
