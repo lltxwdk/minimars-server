@@ -378,6 +378,27 @@ export default (router: Router) => {
               throw new HttpError(400, "无效退款金额");
             }
             card.status = statusWas;
+
+            if (
+              card.type === "balance" &&
+              card.balance &&
+              card.status === CardStatus.ACTIVATED
+            ) {
+              const customer = await UserModel.findById(card.customer);
+              if (!customer) throw new Error("invalid_customer");
+              if (
+                (card.price &&
+                  (!customer.balanceDeposit ||
+                    customer.balanceDeposit < card.price)) ||
+                (card.balance &&
+                  (!customer.balanceReward ||
+                    customer.balanceReward < card.balanceReward))
+              ) {
+                throw new HttpError(400, "用户余额已不足以删除本储值卡");
+              }
+              await customer.depositBalance(-card.balance, -card.price);
+            }
+
             await card.refund(refundAmount);
           } catch (e) {
             if (e.message === "wechat_account_insufficient_balance") {
