@@ -654,6 +654,29 @@ export const initAgenda = async () => {
     }
   });
 
+  agenda.define("sync pospal menus", async (job, done) => {
+    if (process.env.DISABLE_POSPAL_SYNC) {
+      return done();
+    }
+    try {
+      console.log(`[CRO] Running '${job.attrs.name}'...`);
+      const stores = await StoreModel.find();
+      for (const store of stores) {
+        if (!process.env["POSPAL_APPID_" + store.code]) continue;
+        const pospal = new Pospal(store.code);
+        const menu = await pospal.getMenu();
+        store.foodMenu = menu;
+        await store.save();
+        console.log(`[CRO] Store ${store.code} menu updated.`);
+      }
+
+      console.log(`[CRO] Finished '${job.attrs.name}'.`);
+      done();
+    } catch (e) {
+      console.error(e);
+    }
+  });
+
   agenda.define("check pospal payment methods", async (job, done) => {
     console.log(`[CRO] Running '${job.attrs.name}'...`);
     const stores = await StoreModel.find();
@@ -743,6 +766,7 @@ export const initAgenda = async () => {
     agenda.every("0 16,20,22 * * *", "sync pospal customers");
     agenda.every("* * * * *", "sync pospal tickets");
     agenda.every("0 4 1 * *", "generate period card revenue");
+    agenda.every("15 11,16,23 * * *", "sync pospal menus");
   });
 
   agenda.on("error", err => {

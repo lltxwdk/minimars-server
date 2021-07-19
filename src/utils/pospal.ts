@@ -100,14 +100,16 @@ interface Product {
   attribute4: string;
 }
 
-type ProductWithImage = Product &
-  Pick<ProductImage, "imageUrl" | "productBarcode">;
+type ProductWithImage = Product & {
+  imageUrl?: string;
+  productBarcode?: string;
+};
 
 export interface ProductInCustomerMenu {
   uid: string;
   categoryUid: number;
   name: string;
-  imageUrl: string;
+  imageUrl?: string;
   sellPrice: number;
   stock: number;
   description: string;
@@ -436,7 +438,6 @@ export default class Pospal {
   }
 
   async getMenu(): Promise<Menu> {
-    if (this.menu) return this.menu;
     const [categories, productImages, products] = await Promise.all([
       this.queryAllProductCategories(),
       this.queryAllProductImages(),
@@ -452,7 +453,7 @@ export default class Pospal {
       );
       cat.products = catProducts.map(p => {
         const pi = productImages.find(pi => pi.productUid === p.uid);
-        if (!pi) throw new Error("product_image_not_found");
+        if (!pi) return p;
         const pn = Object.assign({}, p, {
           imageUrl: pi.imageUrl,
           productBarcode: pi.productBarcode
