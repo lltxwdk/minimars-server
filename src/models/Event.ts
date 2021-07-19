@@ -53,6 +53,12 @@ export class Event {
   posterUrl!: string;
 
   @prop({
+    get: v => appendResizeImageUrl(v),
+    set: v => removeResizeImageUrl(v)
+  })
+  posterDenseUrl?: string;
+
+  @prop({
     get: v => appendResizeHtmlImage(v),
     set: v => removeResizeHtmlImage(v)
   })

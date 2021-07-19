@@ -14,6 +14,10 @@ import HttpError from "../utils/HttpError";
 import moment from "moment";
 import { Scene } from "./Payment";
 import { Booking } from "./Booking";
+import {
+  appendResizeImageUrl,
+  removeResizeImageUrl
+} from "../utils/imageResize";
 
 class BalancePriceGroup {
   @prop({ type: Number, required: true })
@@ -116,10 +120,16 @@ export class CardType {
   @prop({ type: Boolean, default: false })
   openForReception: boolean = false;
 
-  @prop()
+  @prop({
+    get: v => appendResizeImageUrl(v),
+    set: v => removeResizeImageUrl(v)
+  })
   posterUrl?: string;
 
-  @prop()
+  @prop({
+    get: v => appendResizeImageUrl(v),
+    set: v => removeResizeImageUrl(v)
+  })
   posterDenseUrl?: string;
 
   @prop({ type: String, default: [] })
