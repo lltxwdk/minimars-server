@@ -4,6 +4,7 @@ import { DocumentType } from "@typegoose/typegoose";
 import moment from "moment";
 import JSONBigInt from "json-bigint";
 import userModel, { User } from "../models/User";
+import { Booking } from "../models/Booking";
 
 export interface Ticket {
   cashierUid: string;
@@ -463,5 +464,40 @@ export default class Pospal {
     });
     this.menu = menu;
     return menu;
+  }
+
+  async addOnlineOrder(booking: DocumentType<Booking>): Promise<void> {
+    if (!booking.items) throw new Error("missing_food_items");
+    if (!booking.customer) throw new Error("food_booking_missing_customer");
+    if (!booking.tableId) throw new Error("missing_table_id");
+
+    const [restaurantAreaName, restaurantTableName] =
+      booking.tableId.split(".");
+
+    console.log(booking.customer.mobile);
+
+    const res = await this.post("orderOpenApi/addOnLineOrder", {
+      payMethod: "Wxpay",
+      customerNumber: booking.customer.pospalId,
+      orderDateTime: moment(booking.createdAt).format("YYYY-MM-DD HH:mm:ss"),
+      orderNo: booking.id,
+      contactAddress: "-",
+      contactName: booking.customer.name || "-",
+      contactTel: booking.customer.mobile,
+      deliveryType: 1,
+      payOnLine: 1,
+      // dinnersNumber:3 // 就餐人数
+      restaurantAreaName,
+      restaurantTableName,
+      orderRemark: booking.remarks,
+      items: booking.items.map(i => ({
+        productUid: i.productUid,
+        quantity: i.quantity,
+        comment: ""
+      }))
+    });
+    console.log(
+      `[PSP${this.storeCode}] Food order added, result: ${JSON.stringify(res)}`
+    );
   }
 }

@@ -21,7 +21,8 @@ import { Coupon } from "./Coupon";
 import { sendTemplateMessage, TemplateMessageType } from "../utils/wechat";
 import CardTypeModel from "./CardType";
 import HttpError from "../utils/HttpError";
-import { ProductInCustomerMenu } from "../utils/pospal";
+import Pospal, { ProductInCustomerMenu } from "../utils/pospal";
+import { TimeStamps } from "@typegoose/typegoose/lib/defaultClasses";
 
 const { DEBUG } = process.env;
 
@@ -135,7 +136,7 @@ class FoodItem {
     });
   }
 })
-export class Booking {
+export class Booking extends TimeStamps {
   @prop({ ref: "User" })
   customer?: DocumentType<User>;
 
@@ -629,7 +630,15 @@ export class Booking {
   async paymentSuccess(this: DocumentType<Booking>, atReception = false) {
     // conditional change booking status
     if (this.type === Scene.FOOD) {
-      this.status = BookingStatus.FINISHED;
+      if (!this.store) throw new Error("food_booking_missing_store");
+      try {
+        await new Pospal(this.store.code).addOnlineOrder(this);
+        this.status = BookingStatus.IN_SERVICE;
+      } catch (e) {
+        console.log(`[BOK] Error create food order, cancel...`);
+        await this.cancel();
+        throw new HttpError(400, "点餐下单发生错误，资金已原路退回");
+      }
     } else if ([Scene.GIFT, Scene.EVENT].includes(this.type)) {
       this.status = atReception ? BookingStatus.FINISHED : BookingStatus.BOOKED;
     } else if (this.date === moment().format("YYYY-MM-DD") && atReception) {
