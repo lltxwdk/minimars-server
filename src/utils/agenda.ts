@@ -369,6 +369,73 @@ export const initAgenda = async () => {
     done();
   });
 
+  agenda.define("verify booking paid amount", async (job, done) => {
+    console.log(`[CRO] Running '${job.attrs.name}'...`);
+    const {
+      date,
+      type,
+      fix = false
+    } = job.attrs.data || { date: moment().format("YYYY-MM-DD"), type: "play" };
+    const bookings = await BookingModel.find({ date, type });
+    console.log(`[CRO] ${bookings.length} bookings found...`);
+    for (const booking of bookings) {
+      const amountPaid = booking.amountPaid;
+      const amountPaidInBalance = booking.amountPaidInBalance;
+      const amountPaidInDeposit = booking.amountPaidInDeposit;
+      const amountPaidInCard = booking.amountPaidInCard;
+      const amountPaidInPoints = booking.amountPaidInPoints;
+      await booking.setAmountPaid();
+      const diff: { key: string; stored?: number; calc?: number }[] = [];
+      if (booking.amountPaid !== amountPaid) {
+        diff.push({
+          key: "amountPaid",
+          stored: amountPaid,
+          calc: booking.amountPaid
+        });
+      }
+      if (booking.amountPaidInBalance !== amountPaidInBalance) {
+        diff.push({
+          key: "amountPaidInBalance",
+          stored: amountPaidInBalance,
+          calc: booking.amountPaidInBalance
+        });
+      }
+      if (booking.amountPaidInDeposit !== amountPaidInDeposit) {
+        diff.push({
+          key: "amountPaidInDeposit",
+          stored: amountPaidInDeposit,
+          calc: booking.amountPaidInDeposit
+        });
+      }
+      if (booking.amountPaidInCard !== amountPaidInCard) {
+        diff.push({
+          key: "amountPaidInCard",
+          stored: amountPaidInCard,
+          calc: booking.amountPaidInCard
+        });
+      }
+      if (booking.amountPaidInPoints !== amountPaidInPoints) {
+        diff.push({
+          key: "amountPaidInPoints",
+          stored: amountPaidInPoints,
+          calc: booking.amountPaidInPoints
+        });
+      }
+      if (diff.length) {
+        console.log(
+          `[CRO] Booking ${booking.id} amountPaid diff found: ${diff
+            .map(i => `${i.key}:${i.stored}->${i.calc}`)
+            .join(", ")}`
+        );
+      }
+      if (fix) {
+        await booking.save();
+      }
+    }
+    console.log(`[CRO] Finished '${job.attrs.name}'.`);
+    done();
+  });
+
   agenda.define("generate wechat qrcode", async (job, done) => {
     console.log(`[CRO] Running '${job.attrs.name}'...`);
     const { path } = job.attrs.data || {};
