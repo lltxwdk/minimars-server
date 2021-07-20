@@ -630,14 +630,18 @@ export class Booking extends TimeStamps {
   async paymentSuccess(this: DocumentType<Booking>, atReception = false) {
     // conditional change booking status
     if (this.type === Scene.FOOD) {
-      if (!this.store) throw new Error("food_booking_missing_store");
-      try {
-        await new Pospal(this.store.code).addOnlineOrder(this);
-        this.status = BookingStatus.IN_SERVICE;
-      } catch (e) {
-        console.log(`[BOK] Error create food order, cancel...`);
-        await this.cancel();
-        throw new HttpError(400, "点餐下单发生错误，资金已原路退回");
+      if (!this.tableId) {
+        this.status = BookingStatus.FINISHED;
+      } else {
+        if (!this.store) throw new Error("food_booking_missing_store");
+        try {
+          await new Pospal(this.store.code).addOnlineOrder(this);
+          this.status = BookingStatus.IN_SERVICE;
+        } catch (e) {
+          console.log(`[BOK] Error create food order, cancel...`);
+          await this.cancel();
+          throw new HttpError(400, "点餐下单发生错误，资金已原路退回");
+        }
       }
     } else if ([Scene.GIFT, Scene.EVENT].includes(this.type)) {
       this.status = atReception ? BookingStatus.FINISHED : BookingStatus.BOOKED;
