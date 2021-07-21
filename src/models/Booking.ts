@@ -632,13 +632,23 @@ export class Booking extends TimeStamps {
   async paymentSuccess(this: DocumentType<Booking>, atReception = false) {
     // conditional change booking status
     if (this.type === Scene.FOOD) {
-      if (!this.tableId) {
+      if (!this.tableId || process.env.DISABLE_FOOD_ONLINE_ORDER) {
         this.status = BookingStatus.FINISHED;
       } else {
         if (!this.store) throw new Error("food_booking_missing_store");
         try {
-          await new Pospal(this.store.code).addOnlineOrder(this);
+          const res = (await new Pospal(this.store.code).addOnlineOrder(
+            this
+          )) as unknown as {
+            orderNo: string;
+            orderCreateDateTime: string;
+            customerNumber: string;
+          };
           this.status = BookingStatus.IN_SERVICE;
+          this.providerData = {
+            provider: "pospal",
+            sn: res.orderNo
+          };
         } catch (e) {
           console.log(`[BOK] Error create food order, cancel...`);
           await this.cancel();
