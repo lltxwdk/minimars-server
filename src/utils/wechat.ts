@@ -2,6 +2,7 @@
 import WXOauth from "@xinglu/wxapp-oauth";
 import { Pay, SignType, utils } from "@sigodenjs/wechatpay";
 import fs from "fs";
+import truncate from "truncate-utf8-bytes";
 import Axios, { AxiosRequestConfig } from "axios";
 import { User } from "../models/User";
 import { DocumentType } from "@typegoose/typegoose";
@@ -255,6 +256,7 @@ export const unifiedOrder = async (
   body: string = " ",
   attach: string = ""
 ) => {
+  body = truncate(body, 128);
   const orderData = await pay.unifiedOrder({
     body,
     attach,

@@ -252,9 +252,7 @@ export class Booking extends TimeStamps {
     } else if (this.type === Scene.PARTY) {
       title = "派对消费";
     } else if (this.type === Scene.FOOD) {
-      title =
-        this.items?.map(i => `${i.productName}×${i.quantity}`).join("、") ||
-        "餐饮消费";
+      title = "餐饮消费";
     } else if (this.type === Scene.MALL) {
       title = this.remarks || "";
     } else {
