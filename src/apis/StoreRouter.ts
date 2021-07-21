@@ -162,7 +162,7 @@ export default (router: Router) => {
         }
         const menu = store.foodMenu.filter(cat => {
           cat.products = cat.products
-            .filter(p => p.sellPrice > 0 && p.stock > 0)
+            .filter(p => p.enable && p.sellPrice > 0 && p.stock > 0)
             .map(p => ({
               uid: p.uid,
               categoryUid: p.categoryUid,

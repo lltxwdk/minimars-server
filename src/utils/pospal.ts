@@ -91,6 +91,7 @@ interface Product {
   buyPrice: number;
   sellPrice: number;
   stock: number;
+  enable: number;
   pinyin: string;
   customerPrice: number;
   isCustomerDiscount: number;
@@ -114,6 +115,7 @@ export interface ProductInCustomerMenu {
   sellPrice: number;
   stock: number;
   description: string;
+  enable?: number;
 }
 
 export type Menu = (Category & { products: ProductInCustomerMenu[] })[];
