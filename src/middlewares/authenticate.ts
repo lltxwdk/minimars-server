@@ -47,7 +47,8 @@ export default async function (
       "post(/.*)?",
       "wechat.*",
       "wework.*",
-      "youzan.*"
+      "youzan.*",
+      "qrcode-image.*"
     ].some(pattern => {
       return req.path.match(`^/${pattern}$`);
     })
