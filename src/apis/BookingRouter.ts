@@ -396,7 +396,7 @@ export default (router: Router) => {
           }
         });
 
-        if (!limit) {
+        if (!limit && req.user.role) {
           query.where({ date: moment().format("YYYY-MM-DD") });
         }
 
