@@ -160,6 +160,13 @@ export default class Pospal {
 
   handleError(data: { status: string; messages: string[]; data: any }) {
     if (data.status === "error") {
+      data.messages = data.messages.map(m => {
+        const match = m.match(/^(.*responseCode\=500)/);
+        if (match) {
+          return match[1];
+        }
+        return m;
+      });
       console.error(`[PSP${this.storeCode}] ${data.messages.join("；")}`);
       throw new Error(`pospal_request_error`);
     } else {
@@ -496,8 +503,21 @@ export default class Pospal {
         comment: ""
       }))
     });
+
     console.log(
       `[PSP${this.storeCode}] Food order added, result: ${JSON.stringify(res)}`
     );
+
+    return res;
+  }
+
+  async cancelOnlineOrder(sn: string) {
+    const res = await this.post("orderOpenApi/cancleOrder", { orderNo: sn });
+    console.log(
+      `[PSP${this.storeCode}] Food order canceled, result: ${JSON.stringify(
+        res
+      )}`
+    );
+    return res;
   }
 }
