@@ -520,4 +520,33 @@ export default class Pospal {
     );
     return res;
   }
+
+  async shipOnlineOrder(sn: string) {
+    const res = await this.post("orderOpenApi/shipOrder", {
+      orderNo: sn
+    });
+    console.log(
+      `[PSP${this.storeCode}] Food order shipped, result: ${JSON.stringify(
+        res
+      )}`
+    );
+    return res;
+  }
+
+  async completeOnlineOrder(sn: string) {
+    try {
+      const res = await this.post("orderOpenApi/completeOrder", {
+        orderNo: sn,
+        shouldAddTicket: false
+      });
+      console.log(
+        `[PSP${this.storeCode}] Food order completed, result: ${JSON.stringify(
+          res
+        )}`
+      );
+      return res;
+    } catch (e) {
+      //
+    }
+  }
 }
