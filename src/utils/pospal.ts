@@ -507,6 +507,7 @@ export default class Pospal {
       items: booking.items.map(i => ({
         productUid: i.productUid,
         quantity: i.quantity,
+        manualSellPrice: i.sellPrice,
         comment: ""
       }))
     });

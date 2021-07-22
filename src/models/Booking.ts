@@ -84,6 +84,9 @@ class FoodItem {
   @prop({ type: Number, default: 1 })
   quantity = 1;
 
+  @prop({ type: Number })
+  sellPrice?: number;
+
   @prop({ type: String })
   productCategory?: string;
 
@@ -126,6 +129,7 @@ class FoodItem {
           item.productName = product.name;
           item.productImageUrl = product.imageUrl;
           item.productCategory = cat.name;
+          item.sellPrice = product.sellPrice;
           return true;
         }
         return false;
