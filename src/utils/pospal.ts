@@ -486,7 +486,7 @@ export default class Pospal {
     console.log(booking.customer.mobile);
 
     const res = await this.post("orderOpenApi/addOnLineOrder", {
-      payMethod: "Wxpay",
+      payMethod: "payCode_112",
       customerNumber: booking.customer.pospalId,
       orderDateTime: moment(booking.createdAt).format("YYYY-MM-DD HH:mm:ss"),
       orderNo: booking.id,
@@ -499,6 +499,8 @@ export default class Pospal {
       restaurantAreaName,
       restaurantTableName,
       orderRemark: booking.remarks,
+      orderSource: "openApi",
+      daySeq: booking.tableId + "-" + moment().format("HHmmss"),
       items: booking.items.map(i => ({
         productUid: i.productUid,
         quantity: i.quantity,
