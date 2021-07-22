@@ -500,6 +500,9 @@ export default class Pospal {
       restaurantTableName,
       orderRemark: booking.remarks,
       orderSource: "openApi",
+      totalAmount: booking.payments
+        .filter(p => p.paid)
+        .reduce((amount, p) => +(amount + p.amount).toFixed(10), 0),
       daySeq: booking.tableId + "-" + moment().format("HHmmss"),
       items: booking.items.map(i => ({
         productUid: i.productUid,
