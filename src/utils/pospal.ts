@@ -5,6 +5,7 @@ import moment from "moment";
 import JSONBigInt from "json-bigint";
 import userModel, { User } from "../models/User";
 import { Booking } from "../models/Booking";
+import { PaymentGateway } from "../models/Payment";
 
 export interface Ticket {
   cashierUid: string;
@@ -483,10 +484,8 @@ export default class Pospal {
     const [restaurantAreaName, restaurantTableName] =
       booking.tableId.split(".");
 
-    console.log(booking.customer.mobile);
-
     const res = await this.post("orderOpenApi/addOnLineOrder", {
-      payMethod: "payCode_112",
+      payMethod: "payCode_17",
       customerNumber: booking.customer.pospalId,
       orderDateTime: moment(booking.createdAt).format("YYYY-MM-DD HH:mm:ss"),
       orderNo: booking.id,
