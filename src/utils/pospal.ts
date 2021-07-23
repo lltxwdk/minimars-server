@@ -491,7 +491,7 @@ export default class Pospal {
       orderNo: booking.id,
       contactAddress: "-",
       contactName: booking.customer.name || "-",
-      contactTel: booking.customer.mobile,
+      contactTel: booking.customer.mobile || "-",
       deliveryType: 1,
       payOnLine: 1,
       // dinnersNumber:3 // 就餐人数
@@ -503,7 +503,7 @@ export default class Pospal {
         .filter(p => p.paid)
         .reduce((amount, p) => amount + p.amount, 0)
         .toFixed(2),
-      daySeq: booking.tableId + "-" + moment().format("HHmmss"),
+      daySeq: booking.tableId.split(".")[1] + "-" + moment().format("HHmmss"),
       items: booking.items.map(i => ({
         productUid: i.productUid,
         quantity: i.quantity,
