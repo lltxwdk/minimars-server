@@ -251,8 +251,6 @@ export class CardType {
         (price, group) => +(price + group.balance * group.count).toFixed(10),
         0
       );
-    } else if (this.balancePriceGroups && this.balancePriceGroups.length) {
-      throw new HttpError(400, `没有选择面额组合`);
     }
 
     if (this.end) {
