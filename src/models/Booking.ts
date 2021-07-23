@@ -138,8 +138,12 @@ class FoodItem {
         throw new HttpError(404, `未找到餐品编号：${item.productUid}`);
       }
     });
-    if (this.store?.code === "HX" && this.tableId) {
-      this.tableId = this.tableId.replace(/(\w)(\d+)/, "$18$2");
+    if (
+      this.store?.code === "HX" &&
+      this.tableId &&
+      !this.tableId.match(/\-1$/)
+    ) {
+      this.tableId = this.tableId + "-1";
     }
   }
 })
