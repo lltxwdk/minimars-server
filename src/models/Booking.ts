@@ -138,6 +138,9 @@ class FoodItem {
         throw new HttpError(404, `未找到餐品编号：${item.productUid}`);
       }
     });
+    if (this.store?.code === "HX" && this.tableId) {
+      this.tableId = this.tableId.replace(/(\w)(\d+)/, "$18$2");
+    }
   }
 })
 export class Booking extends TimeStamps {
