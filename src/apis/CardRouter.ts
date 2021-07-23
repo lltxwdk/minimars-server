@@ -298,7 +298,7 @@ export default (router: Router) => {
         } else if (!req.user.role) {
           query.find({
             status: {
-              $in: [CardStatus.ACTIVATED, CardStatus.VALID, CardStatus.EXPIRED]
+              $in: [CardStatus.ACTIVATED, CardStatus.VALID]
             }
           });
         }
