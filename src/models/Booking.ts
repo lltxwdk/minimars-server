@@ -415,7 +415,8 @@ export class Booking extends TimeStamps {
           const product = products.find(p => p.uid === item.productUid);
           if (!product) throw new Error("food_product_not_found");
           bookingPrice.price = +(
-            bookingPrice.price + product.sellPrice
+            bookingPrice.price +
+            product.sellPrice * item.quantity
           ).toFixed(10);
         }
       }
