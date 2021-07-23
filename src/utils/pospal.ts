@@ -484,7 +484,7 @@ export default class Pospal {
     const [restaurantAreaName, restaurantTableName] =
       booking.tableId.split(".");
 
-    const res = await this.post("orderOpenApi/addOnLineOrder", {
+    const data = {
       payMethod: "payCode_17",
       customerNumber: booking.customer.pospalId,
       orderDateTime: moment(booking.createdAt).format("YYYY-MM-DD HH:mm:ss"),
@@ -510,7 +510,13 @@ export default class Pospal {
         manualSellPrice: i.sellPrice,
         comment: ""
       }))
-    });
+    };
+
+    console.log(
+      `[PSP${this.storeCode}] Food order request: ${JSON.stringify(data)}`
+    );
+
+    const res = await this.post("orderOpenApi/addOnLineOrder", data);
 
     console.log(
       `[PSP${this.storeCode}] Food order added, result: ${JSON.stringify(res)}`
