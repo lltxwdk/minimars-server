@@ -875,11 +875,11 @@ export class Booking extends TimeStamps {
         await this.gift.save();
       }
     } else if (this.type === Scene.FOOD) {
-      if (this.providerData?.provider === "pospal") {
-        if (!this.store?.code)
-          throw new Error("pospal_booking_missing_store_code");
-        new Pospal(this.store.code).cancelOnlineOrder(this.providerData.sn);
-      }
+      // if (this.providerData?.provider === "pospal") {
+      //   if (!this.store?.code)
+      //     throw new Error("pospal_booking_missing_store_code");
+      //   new Pospal(this.store.code).cancelOnlineOrder(this.providerData.sn);
+      // }
     }
 
     const amountRefundedNoCoupon = this.payments.reduce((amount, p) => {
