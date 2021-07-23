@@ -488,7 +488,7 @@ export default class Pospal {
       payMethod: "payCode_17",
       customerNumber: booking.customer.pospalId,
       orderDateTime: moment(booking.createdAt).format("YYYY-MM-DD HH:mm:ss"),
-      orderNo: booking.id,
+      // orderNo: booking.id,
       contactAddress: "-",
       contactName: booking.customer.name || "-",
       contactTel: booking.customer.mobile || "-",
