@@ -55,7 +55,8 @@ export const SceneLabel = {
   if (this.paid) {
     // this.paid is modified to true and save
     // currently only wechatpay goes here
-    await this.paidSuccess();
+    // wechat paidSuccess logic moved to WechatRouter
+    // await this.paidSuccess();
     return next();
   }
 

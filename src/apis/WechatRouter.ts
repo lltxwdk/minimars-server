@@ -205,6 +205,9 @@ export default (router: Router) => {
 
         await payment.save();
 
+        // async trigger paidSuccess after
+        payment.paidSuccess();
+
         return successData;
       });
 
