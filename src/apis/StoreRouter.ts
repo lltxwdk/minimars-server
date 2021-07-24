@@ -8,6 +8,7 @@ import { StoreQuery, StorePostBody, StorePutBody } from "./interfaces";
 import { DocumentType } from "@typegoose/typegoose";
 import { Permission } from "../models/Role";
 import Pospal, { ProductInCustomerMenu } from "../utils/pospal";
+import { config } from "../models/Config";
 
 export default (router: Router) => {
   // Store CURD
@@ -160,20 +161,27 @@ export default (router: Router) => {
           store.foodMenu = menu;
           await store.save();
         }
-        const menu = store.foodMenu.filter(cat => {
-          cat.products = cat.products
-            .filter(p => p.enable && p.sellPrice > 0 && p.stock > 0)
-            .map(p => ({
-              uid: p.uid,
-              categoryUid: p.categoryUid,
-              name: p.name,
-              imageUrl: p.imageUrl,
-              description: p.description,
-              sellPrice: p.sellPrice,
-              stock: p.stock
-            }));
-          return cat.products.length;
-        });
+        const menu = store.foodMenu
+          .map(cat => ({
+            ...cat,
+            order: config.foodMenuOrder?.[cat.name] || 0
+          }))
+          .filter(cat => {
+            if (cat.order < 0) return;
+            cat.products = cat.products
+              .filter(p => p.enable && p.sellPrice > 0 && p.stock > 0)
+              .map(p => ({
+                uid: p.uid,
+                categoryUid: p.categoryUid,
+                name: p.name,
+                imageUrl: p.imageUrl,
+                description: p.description,
+                sellPrice: p.sellPrice,
+                stock: p.stock
+              }));
+            return cat.products.length;
+          })
+          .sort((a, b) => b.order - a.order);
         const storeObject = store.toJSON();
         delete storeObject.foodMenu;
         res.json({

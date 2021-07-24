@@ -30,5 +30,6 @@ const initConfig: Config = {
   playHint: "",
   offWeekdays: [],
   onWeekends: [],
-  bookableDays: 15
+  bookableDays: 15,
+  foodMenuOrder: { 饮品: 100 }
 };

@@ -49,6 +49,7 @@ export class Config {
   offWeekdays?: string[];
   onWeekends?: string[];
   bookableDays?: number;
+  foodMenuOrder?: Record<string, number>;
 }
 
 export const config: Config = {};
