@@ -536,6 +536,11 @@ export default (router: Router) => {
                 "YYYY-MM-DD HH:mm"
               )} 取消申请通过，已发起退款，微信支付将在1-7天内原路退回。*小程序端可见*`;
             }
+          } else if (
+            statusWas === BookingStatus.PENDING &&
+            req.user.id === booking.customer?.id
+          ) {
+            await booking.cancel(false);
           }
         }
 
