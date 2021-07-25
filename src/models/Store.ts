@@ -234,6 +234,8 @@ export class Store {
       }
       try {
         const [date, checkInAt] = ticket.datetime.split(" ");
+        const items = ticket.items;
+        delete ticket.items;
         const booking = new BookingModel({
           type: Scene.FOOD,
           status: BookingStatus.FINISHED,
@@ -243,9 +245,9 @@ export class Store {
           store: this, // TODO conditional store
           // TODO booking card
           // TODO booking customer
+          items,
           providerData: { provider: "pospal", ...ticket, payments: undefined },
-          createdAt: new Date(ticket.datetime),
-          remarks: ticket.items.map(i => `${i.name}×${i.quantity}`).join("\n")
+          createdAt: new Date(ticket.datetime)
         });
 
         if (ticket.customerUid) {

@@ -91,7 +91,7 @@ class FoodItem {
   productCategory?: string;
 
   @prop({ type: String })
-  productName?: string;
+  name?: string;
 
   @prop({ type: String })
   productImageUrl?: string;
@@ -126,7 +126,7 @@ class FoodItem {
       const matchCategory = menu.find(cat => {
         const product = cat.products.find(p => p.uid === item.productUid);
         if (product) {
-          item.productName = product.name;
+          item.name = product.name;
           item.productImageUrl = product.imageUrl;
           item.productCategory = cat.name;
           item.sellPrice = product.sellPrice;

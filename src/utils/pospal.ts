@@ -24,7 +24,7 @@ export interface Ticket {
   rounding: number;
   ticketType: string;
   invalid: number;
-  items: Item[];
+  items?: Item[];
   payments: Payment[];
 }
 
