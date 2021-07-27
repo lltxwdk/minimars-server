@@ -41,7 +41,7 @@ export default (router: Router) => {
           createdAt: -1
         };
 
-        if (!req.user.role) {
+        if (!req.user.role && !req.user.tags.includes("headquarter")) {
           query.where({ order: { $gte: 0 } });
         }
 

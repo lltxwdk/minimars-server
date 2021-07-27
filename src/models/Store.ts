@@ -322,7 +322,7 @@ export class Store {
 
   async checkPospalPaymentMethods() {
     const allMethods = await new Pospal(this.code).queryAllPayMethod();
-    const currentMethodMap = this?.pospalPaymentMethodMap;
+    const currentMethodMap = this.pospalPaymentMethodMap;
     if (currentMethodMap) {
       for (let m in currentMethodMap) {
         const methodItem = allMethods.find((item: any) => item.code === m);
