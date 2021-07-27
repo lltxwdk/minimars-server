@@ -41,6 +41,10 @@ export default (router: Router) => {
           createdAt: -1
         };
 
+        if (!req.user.role) {
+          query.where({ order: { $gte: 0 } });
+        }
+
         let total = await query.countDocuments();
         const page = await query
           .find()

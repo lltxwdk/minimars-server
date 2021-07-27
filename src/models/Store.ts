@@ -86,6 +86,9 @@ export class Store {
   @prop()
   phone!: string;
 
+  @prop({ type: Number })
+  order = 0;
+
   @prop({
     required: true,
     get: v => appendResizeImageUrl(v),
