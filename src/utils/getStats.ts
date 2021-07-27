@@ -111,7 +111,9 @@ export default async (
     .reduce(
       (acc, booking) => {
         let key: "card" | "balance" | "coupon" | "guest" | "contract" | "other";
-        if (booking.amountPaidInBalance) {
+        if (booking.coupon) {
+          key = "coupon";
+        } else if (booking.amountPaidInBalance) {
           key = "balance";
         } else if (booking.card) {
           if (booking.card.isContract) {
@@ -119,8 +121,6 @@ export default async (
           } else {
             key = "card";
           }
-        } else if (booking.coupon) {
-          key = "coupon";
         } else if (!booking.card && !booking.coupon) {
           key = "guest";
         } else {
