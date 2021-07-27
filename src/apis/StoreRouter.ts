@@ -146,7 +146,7 @@ export default (router: Router) => {
             "name code phone address posterUrl foodMenu"
           );
         }
-        if (req.query.storeCode) {
+        if (req.query.storeCode !== undefined) {
           store = await StoreModel.findOne({
             code: req.query.storeCode
           }).select("name code phone address posterUrl foodMenu");

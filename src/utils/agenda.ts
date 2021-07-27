@@ -729,12 +729,16 @@ export const initAgenda = async () => {
       console.log(`[CRO] Running '${job.attrs.name}'...`);
       const stores = await StoreModel.find();
       for (const store of stores) {
-        if (!process.env["POSPAL_APPID_" + store.code]) continue;
-        const pospal = new Pospal(store.code);
-        const menu = await pospal.getMenu();
-        store.foodMenu = menu;
-        await store.save();
-        console.log(`[CRO] Store ${store.code} menu updated.`);
+        try {
+          const pospal = new Pospal(store.code);
+          const menu = await pospal.getMenu();
+          store.foodMenu = menu;
+          await store.save();
+          console.log(`[CRO] Store ${store.code} menu updated.`);
+        } catch (err) {
+          console.error(`[CRO] ${err.message}`);
+          continue;
+        }
       }
 
       console.log(`[CRO] Finished '${job.attrs.name}'.`);
