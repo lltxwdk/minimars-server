@@ -108,6 +108,18 @@ type ProductWithImage = Product & {
   productBarcode?: string;
 };
 
+interface FlavorGroup {
+  uid: string;
+  name: string;
+  flavors: {
+    uid: string;
+    name: string;
+    extraPrice?: number;
+    isSuggest?: boolean;
+    isDefault?: boolean;
+  }[];
+}
+
 export interface ProductInCustomerMenu {
   uid: string;
   categoryUid: number;
@@ -117,9 +129,42 @@ export interface ProductInCustomerMenu {
   stock: number;
   description: string;
   enable?: number;
+  unitName?: string;
+  flavorGroups?: FlavorGroup[];
 }
 
 export type Menu = (Category & { products: ProductInCustomerMenu[] })[];
+
+export interface ProductAttributePackage {
+  id: number;
+  userId: number;
+  uid: string;
+  packageName: string;
+  packageType: number;
+  sortValue: string;
+  enjoyDiscount: number;
+}
+
+export interface ProductAttribute {
+  id: number;
+  userId: number;
+  uid: string;
+  attributeGroup: string;
+  attributeName: string;
+  attributeValue: string;
+  sortValue: string;
+  packageUid: string;
+  isDefault: number;
+}
+
+export interface ProductOtherInfo {
+  userId: number;
+  productUid: string;
+  tagNames: [];
+  unitUid: string;
+  unitName: string;
+  attributes: { productAttributeUid: string; suggest: number }[];
+}
 
 export default class Pospal {
   api: AxiosInstance;
@@ -448,28 +493,113 @@ export default class Pospal {
     return products;
   }
 
+  async queryProductOtherInfoByUids(productUids: string[]) {
+    return (await this.post("productOpenApi/queryProducOtherInfotByUids", {
+      productUids
+    })) as ProductOtherInfo[];
+  }
+
+  async queryAllProductAttributePackage() {
+    return (await this.post(
+      "productOpenApi/queryAllProductAttributePackage",
+      {}
+    )) as ProductAttributePackage[];
+  }
+
+  async queryAllProductAttribute() {
+    return (await this.post(
+      "productOpenApi/queryAllProductattribute",
+      {}
+    )) as ProductAttribute[];
+  }
+
   async getMenu(): Promise<Menu> {
-    const [categories, productImages, products] = await Promise.all([
-      this.queryAllProductCategories(),
-      this.queryAllProductImages(),
-      this.queryAllProducts()
-    ]);
+    const [categories, productImages, products, attributePackages, attributes] =
+      await Promise.all([
+        this.queryAllProductCategories(),
+        this.queryAllProductImages(),
+        this.queryAllProducts(),
+        this.queryAllProductAttributePackage(),
+        this.queryAllProductAttribute()
+      ]);
+
+    const openProducts = products.filter(
+      p => p.enable && p.sellPrice > 0 && p.stock > 0
+    );
+
+    if (openProducts.length > 200) {
+      console.error(
+        `[PSP${this.storeCode}] too many open products, may cause incomplete flavor data, ${openProducts.length} found.`
+      );
+    }
+
+    const extraInfos = await this.queryProductOtherInfoByUids(
+      openProducts.map(p => p.uid)
+    );
+
     const menu = categories.map(c => ({
       ...c,
-      products: [] as ProductWithImage[]
+      products: [] as ProductInCustomerMenu[]
     }));
     menu.forEach(cat => {
       const catProducts = products.filter(
         p => p.categoryUid.toString() === cat.uid
       );
       cat.products = catProducts.map(p => {
-        const pi = productImages.find(pi => pi.productUid === p.uid);
-        if (!pi) return p;
-        const pn = Object.assign({}, p, {
-          imageUrl: pi.imageUrl,
-          productBarcode: pi.productBarcode
+        const productImage = productImages.find(pi => pi.productUid === p.uid);
+        if (!productImage) return p;
+        const extraInfo = extraInfos.find(i => i.productUid === p.uid);
+        const productWithImage = Object.assign({}, p, {
+          imageUrl: productImage.imageUrl,
+          productBarcode: productImage.productBarcode
         });
-        return pn;
+
+        if (!extraInfo) return productWithImage;
+
+        const unitName = extraInfo.unitName;
+
+        if (!extraInfo.attributes) {
+          return { ...productWithImage, unitName };
+        }
+
+        const productAttributes = extraInfo.attributes
+          .map(attribute => {
+            const productAttribute = attributes.find(
+              att => att.uid === attribute.productAttributeUid
+            );
+            return productAttribute
+              ? { ...productAttribute, suggest: attribute.suggest }
+              : undefined;
+          })
+          .filter(
+            (v): v is ProductAttribute & { suggest: number } => v !== undefined
+          );
+
+        const flavorGroups = productAttributes.reduce((groups, attribute) => {
+          const attributePackage = attributePackages.find(
+            p => p.uid === attribute.packageUid
+          );
+          if (!attributePackage) return groups;
+          let flavorGroup = groups.find(g => g.uid === attributePackage.uid);
+          if (!flavorGroup) {
+            flavorGroup = {
+              uid: attributePackage.uid,
+              name: attributePackage.packageName,
+              flavors: []
+            };
+            groups.push(flavorGroup);
+          }
+          flavorGroup.flavors.push({
+            uid: attribute.uid,
+            name: attribute.attributeName,
+            extraPrice: +attribute.attributeValue || undefined,
+            isSuggest: attribute.suggest ? true : undefined,
+            isDefault: attribute.suggest ? true : undefined
+          });
+          return groups;
+        }, [] as FlavorGroup[]);
+
+        return { ...productWithImage, unitName, flavorGroups };
       });
     });
     this.menu = menu;
