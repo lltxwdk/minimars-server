@@ -181,7 +181,9 @@ export default (router: Router) => {
                 imageUrl: p.imageUrl,
                 description: p.description,
                 sellPrice: p.sellPrice,
-                stock: p.stock
+                stock: p.stock,
+                unitName: p.unitName,
+                flavorGroups: p.flavorGroups
               }));
             return cat.products.length;
           })
