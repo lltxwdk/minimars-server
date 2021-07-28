@@ -95,6 +95,9 @@ class FoodItem {
 
   @prop({ type: String })
   productImageUrl?: string;
+
+  @prop({ type: String })
+  comment?: string;
 }
 
 @plugin(autoPopulate, [
@@ -425,6 +428,20 @@ export class Booking extends TimeStamps {
             bookingPrice.price +
             product.sellPrice * item.quantity
           ).toFixed(10);
+          if (item.comment) {
+            for (const flavorName of item.comment.split(" ")) {
+              product.flavorGroups?.forEach(g => {
+                g.flavors.forEach(f => {
+                  if (f.name === flavorName && f.extraPrice) {
+                    bookingPrice.price = +(
+                      bookingPrice.price +
+                      f.extraPrice * item.quantity
+                    ).toFixed(10);
+                  }
+                });
+              });
+            }
+          }
         }
       }
       if (this.card && !this.populated("card")) {

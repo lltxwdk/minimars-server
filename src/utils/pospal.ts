@@ -638,7 +638,7 @@ export default class Pospal {
         productUid: i.productUid,
         quantity: i.quantity,
         manualSellPrice: i.sellPrice,
-        comment: ""
+        comment: i.comment || ""
       }))
     };
 
