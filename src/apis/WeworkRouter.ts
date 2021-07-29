@@ -7,6 +7,7 @@ import aes256 from "aes256";
 import {
   ApprovalDetail,
   ApprovalNotify,
+  ApprovalStatus,
   ApprovalStatusText,
   getApprovalDetail,
   handleCancelBooking,
@@ -44,8 +45,8 @@ export default (router: Router) => {
         })) as ApprovalNotify;
         console.log("[WCO] Approval notify:", JSON.stringify(notify));
         res.send("OK");
+        const approval = await getApprovalDetail(notify.ApprovalInfo.SpNo);
         try {
-          const approval = await getApprovalDetail(notify.ApprovalInfo.SpNo);
           if (
             notify.ApprovalInfo.TemplateId ===
             "BsAd7Rvwop3PcMWxezN1KEPYqJCw4RnSsX7L74kNn"
@@ -59,11 +60,16 @@ export default (router: Router) => {
             +notify.AgentID,
             `你提交的审批信息有误，${e.message}`
           );
-          sendMessage(
-            [notify.ApprovalInfo.SpRecord.Details.Approver.UserId],
-            +notify.AgentID,
-            `该审批信息有误，${e.message}`
+          const nextRecord = approval.sp_record.find(
+            r => r.sp_status === ApprovalStatus.SUBMITTED
           );
+          if (nextRecord) {
+            sendMessage(
+              nextRecord?.details.map(d => d.approver.userid),
+              +notify.AgentID,
+              `该审批信息有误，${e.message}`
+            );
+          }
         }
       })
     );
