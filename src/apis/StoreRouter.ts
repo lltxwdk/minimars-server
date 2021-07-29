@@ -9,6 +9,7 @@ import { DocumentType } from "@typegoose/typegoose";
 import { Permission } from "../models/Role";
 import Pospal, { ProductInCustomerMenu } from "../utils/pospal";
 import { config } from "../models/Config";
+import agenda from "../utils/agenda";
 
 export default (router: Router) => {
   // Store CURD
@@ -195,6 +196,14 @@ export default (router: Router) => {
           tableId,
           menu
         });
+      })
+    )
+    .post(
+      handleAsyncErrors(async (req: Request, res: Response) => {
+        if (req.body.updateAll) {
+          agenda.now("sync pospal menus", null);
+        }
+        res.end();
       })
     );
 
