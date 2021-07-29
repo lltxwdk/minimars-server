@@ -122,6 +122,13 @@ export enum ApprovalStatusText {
   REVOKED = "4"
 }
 
+export enum ApprovalStatusChangeEventText {
+  SUBMITTED = "1",
+  APPROVED = "2",
+  REJECTED = "3",
+  REVOKED = "6"
+}
+
 export enum ApprovalStatus {
   SUBMITTED = 1,
   APPROVED = 2,
@@ -145,18 +152,18 @@ export interface ApprovalNotify extends Notify {
     TemplateId: string;
     ApplyTime: string;
     Applyer: { UserId: string; Party: string };
-    SpRecord: {
-      SpStatus: ApprovalStatusText;
-      ApproverAttr: string;
-      Details: {
-        Approver: { UserId: string };
-        Speech: string;
-        SpStatus: ApprovalStatusText;
-        SpTime: string;
-      };
-    };
-    Notifyer: { UserId: string }[];
-    StatuChangeEvent: string;
+    // SpRecord: {
+    //   SpStatus: ApprovalStatusText;
+    //   ApproverAttr: string;
+    //   Details: {
+    //     Approver: { UserId: string };
+    //     Speech: string;
+    //     SpStatus: ApprovalStatusText;
+    //     SpTime: string;
+    //   };
+    // };
+    // Notifyer: { UserId: string }[];
+    StatuChangeEvent: ApprovalStatusChangeEventText;
   };
 }
 

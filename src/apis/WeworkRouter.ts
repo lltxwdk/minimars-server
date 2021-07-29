@@ -8,6 +8,7 @@ import {
   ApprovalDetail,
   ApprovalNotify,
   ApprovalStatus,
+  ApprovalStatusChangeEventText,
   ApprovalStatusText,
   getApprovalDetail,
   handleCancelBooking,
@@ -55,7 +56,12 @@ export default (router: Router) => {
           }
         } catch (e) {
           console.error(`[WCO] ${e.message}`);
-          if (notify.ApprovalInfo.SpStatus !== ApprovalStatusText.REVOKED) {
+          if (
+            [
+              ApprovalStatusChangeEventText.SUBMITTED,
+              ApprovalStatusChangeEventText.REJECTED
+            ].includes(notify.ApprovalInfo.StatuChangeEvent)
+          ) {
             sendMessage(
               [notify.ApprovalInfo.Applyer.UserId],
               +notify.AgentID,
