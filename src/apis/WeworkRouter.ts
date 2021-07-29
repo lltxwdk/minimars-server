@@ -55,11 +55,13 @@ export default (router: Router) => {
           }
         } catch (e) {
           console.error(`[WCO] ${e.message}`);
-          sendMessage(
-            [notify.ApprovalInfo.Applyer.UserId],
-            +notify.AgentID,
-            `你提交的审批信息有误，${e.message}`
-          );
+          if (notify.ApprovalInfo.SpStatus !== ApprovalStatusText.REVOKED) {
+            sendMessage(
+              [notify.ApprovalInfo.Applyer.UserId],
+              +notify.AgentID,
+              `你提交的审批信息有误，${e.message}`
+            );
+          }
           const nextRecord = approval.sp_record.find(
             r => r.sp_status === ApprovalStatus.SUBMITTED
           );
