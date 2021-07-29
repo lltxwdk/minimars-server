@@ -26,10 +26,6 @@ import BookingModel from "../models/Booking";
 import { syncUserPoints } from "./youzan";
 import PaymentModel from "../models/Payment";
 
-const pospalTicketsSyncInterval = +(
-  process.env.POSPAL_TICKETS_SYNC_INTERVAL || 1
-);
-
 const mongodbUrl = process.env.MONGODB_URL || "";
 
 const agenda: Agenda = new Agenda();
@@ -646,7 +642,7 @@ export const initAgenda = async () => {
     for (let n = 0; n < timesInAMinute; n++) {
       stores.forEach(async store => {
         try {
-          await store.syncPospalTickets(pospalTicketsSyncInterval * 2);
+          await store.syncPospalTickets(10);
         } catch (e) {
           return;
         }
