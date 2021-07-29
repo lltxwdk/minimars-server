@@ -153,7 +153,7 @@ export interface ApprovalNotify extends Notify {
         Speech: string;
         SpStatus: ApprovalStatusText;
         SpTime: string;
-      }[];
+      };
     };
     Notifyer: { UserId: string }[];
     StatuChangeEvent: string;

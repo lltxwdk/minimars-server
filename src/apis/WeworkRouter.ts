@@ -59,6 +59,11 @@ export default (router: Router) => {
             +notify.AgentID,
             `你提交的审批信息有误，${e.message}`
           );
+          sendMessage(
+            [notify.ApprovalInfo.SpRecord.Details.Approver.UserId],
+            +notify.AgentID,
+            `该审批信息有误，${e.message}`
+          );
         }
       })
     );
