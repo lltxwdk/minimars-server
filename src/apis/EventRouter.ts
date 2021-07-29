@@ -22,7 +22,7 @@ export default (router: Router) => {
           throw new HttpError(403);
         }
         const event = new EventModel(req.body as EventPostBody);
-        if (!event.price && !event.priceInPoints) {
+        if (event.price === undefined && event.priceInPoints === undefined) {
           throw new HttpError(400, "积分和收款售价必须至少设置一项");
         }
         await event.save();
