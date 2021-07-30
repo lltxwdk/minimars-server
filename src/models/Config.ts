@@ -50,6 +50,7 @@ export class Config {
   onWeekends?: string[];
   bookableDays?: number;
   foodMenuOrder?: Record<string, number>;
+  welcomeRewardCard?: { slug: string };
 }
 
 export const config: Config = {};

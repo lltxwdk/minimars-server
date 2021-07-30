@@ -31,5 +31,6 @@ const initConfig: Config = {
   offWeekdays: [],
   onWeekends: [],
   bookableDays: 15,
-  foodMenuOrder: { 饮品: 100 }
+  foodMenuOrder: { 饮品: 100 },
+  welcomeRewardCard: { slug: "welcome" }
 };
