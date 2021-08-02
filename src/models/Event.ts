@@ -45,18 +45,8 @@ export class Event {
   @prop({ type: String })
   tags!: string[];
 
-  @prop({
-    required: true,
-    get: v => appendResizeImageUrl(v),
-    set: v => removeResizeImageUrl(v)
-  })
-  posterUrl!: string;
-
-  @prop({
-    get: v => appendResizeImageUrl(v),
-    set: v => removeResizeImageUrl(v)
-  })
-  posterDenseUrl?: string;
+  @prop()
+  ipCharacter!: string;
 
   @prop({
     get: v => appendResizeHtmlImage(v),

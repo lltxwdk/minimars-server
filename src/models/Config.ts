@@ -51,6 +51,11 @@ export class Config {
   bookableDays?: number;
   foodMenuOrder?: Record<string, number>;
   welcomeRewardCard?: { slug: string };
+  ipCharacters?: {
+    name: string;
+    coverTextColor: string;
+    workshopName: string;
+  }[];
 }
 
 export const config: Config = {};
