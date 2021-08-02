@@ -16,16 +16,20 @@ import { syncUserPoints } from "../utils/youzan";
 import { Role, Permission } from "./Role";
 import { Gift } from "./Gift";
 
-@pre("validate", function (next) {
-  const user = this as DocumentType<User>;
-  if (user.balanceDeposit)
-    user.balanceDeposit = +user.balanceDeposit.toFixed(2);
-  if (user.balanceReward) user.balanceReward = +user.balanceReward.toFixed(2);
-  if (!user.role && user.points === undefined) {
-    user.points = 0;
+@pre("validate", function (this: DocumentType<User>, next) {
+  if (this.balanceDeposit)
+    this.balanceDeposit = +this.balanceDeposit.toFixed(2);
+  if (this.balanceReward) this.balanceReward = +this.balanceReward.toFixed(2);
+  if (!this.role && this.points === undefined) {
+    this.points = 0;
   }
-  if (user.tags) {
-    user.tags = user.tags.map(t => t.toLowerCase());
+  if (this.tags) {
+    this.tags = this.tags.map(t => t.toLowerCase());
+  }
+  if (this.mobile) {
+    this.mobileSegments = [this.mobile.substr(-4), this.mobile.substr(-5)].join(
+      " "
+    );
   }
   next();
 })
@@ -43,13 +47,6 @@ import { Gift } from "./Gift";
   cardNo: "text",
   tags: "text",
   mobileSegments: "text"
-})
-@pre("validate", function (this: DocumentType<User>) {
-  if (this.mobile) {
-    this.mobileSegments = [this.mobile.substr(-4), this.mobile.substr(-5)].join(
-      " "
-    );
-  }
 })
 export class User {
   @prop({ ref: Role })
