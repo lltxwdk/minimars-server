@@ -91,7 +91,11 @@ export default (router: Router) => {
         }
 
         if (!booking.checkInAt) {
-          booking.checkInAt = config.appointmentDeadline || "16:00:00";
+          if (booking.date <= moment().format("YYYY-MM-DD")) {
+            booking.checkInAt = moment().format("HH:mm:ss");
+          } else {
+            booking.checkInAt = config.appointmentDeadline || "16:00:00";
+          }
         }
 
         if (!req.user.role && !booking.customer.equals(req.user)) {
