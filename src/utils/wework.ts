@@ -89,21 +89,22 @@ export async function sendMessage(
 
 export async function handleCancelBooking(
   approval: ApprovalDetail,
-  agentId: string
+  agentId: string,
+  requirePendingRefund = true
 ) {
   const bookingId = approval.getTextField("系统订单号");
   if (!isValidHexObjectId(bookingId || "")) {
     throw new Error(`“${bookingId}”不是有效的订单号`);
   }
-  const mobile = approval.getTextField("客户手机号");
+  const mobile = approval.getTextField("客人手机号");
   const booking = await BookingModel.findById(bookingId);
   if (!booking) {
     throw new Error(`查询不到订单“${bookingId}”`);
   }
   if (booking.customer?.mobile !== mobile) {
-    throw new Error(`客户手机号${mobile || ""}校验失败，订单和手机号不匹配`);
+    throw new Error(`客人手机号${mobile || ""}校验失败，订单和手机号不匹配`);
   }
-  if (booking.status !== BookingStatus.PENDING_REFUND) {
+  if (booking.status !== BookingStatus.PENDING_REFUND && requirePendingRefund) {
     throw new Error(`订单状态不是“待退款”`);
   }
   if (approval.sp_status === ApprovalStatus.APPROVED) {

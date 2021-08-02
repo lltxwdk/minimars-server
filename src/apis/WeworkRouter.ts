@@ -16,7 +16,11 @@ import {
 } from "../utils/wework";
 import BookingModel from "../models/Booking";
 
-const { WEWORK_APPROVAL_ENCODEING_AES_KEY: aesKeyBase64 = "" } = process.env;
+const {
+  WEWORK_APPROVAL_ENCODEING_AES_KEY: aesKeyBase64 = "",
+  WEWORK_APPROVAL_TEMPLATE_ID_CANCEL_PLAY: templateIdCancelPlay = "",
+  WEWORK_APPROVAL_TEMPLATE_ID_CANCEL_FOOD: templateIdCancelFood = ""
+} = process.env;
 
 export default (router: Router) => {
   router
@@ -48,11 +52,15 @@ export default (router: Router) => {
         res.send("OK");
         const approval = await getApprovalDetail(notify.ApprovalInfo.SpNo);
         try {
-          if (
-            notify.ApprovalInfo.TemplateId ===
-            "BsAd7Rvwop3PcMWxezN1KEPYqJCw4RnSsX7L74kNn"
-          ) {
-            await handleCancelBooking(approval, notify.AgentID);
+          switch (notify.ApprovalInfo.TemplateId) {
+            case templateIdCancelPlay: {
+              await handleCancelBooking(approval, notify.AgentID);
+              break;
+            }
+            case templateIdCancelFood: {
+              await handleCancelBooking(approval, notify.AgentID, false);
+              break;
+            }
           }
         } catch (e) {
           console.error(`[WCO] ${e.message}`);
