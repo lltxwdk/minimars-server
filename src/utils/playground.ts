@@ -76,8 +76,8 @@ export default async function playground() {
     // await saveTableQr("TS", "大派对房", "1");
     // console.log(await new Pospal("TS").queryAllProductCategories());
     // const start = moment("2019-01-01");
-    // while (start.toDate() < new Date()) {
-    //   await calCohort(start.format("Y-MM-DD"));
+    // while (start.toDate().valueOf() < new Date("2021/06/01").valueOf()) {
+    //   await calCohort(start.format("Y-MM-DD"), "month");
     //   console.log("\n");
     //   start.add(1, "quarter");
     // }
@@ -106,10 +106,10 @@ async function saveTableQr(s: string, a: string, t: string) {
   await getQrcode(code, path);
 }
 
-async function calCohort(startStr: string) {
+async function calCohort(startStr: string, tick: "month" | "quarter") {
   const start = moment(startStr);
-  const end = start.clone().endOf("month");
-  const [{ users }] = await BookingModel.aggregate([
+  const end = start.clone().endOf(tick);
+  const [{ users, visits, adults, kids }] = await BookingModel.aggregate([
     {
       $match: {
         type: Scene.PLAY,
@@ -118,26 +118,55 @@ async function calCohort(startStr: string) {
         date: { $gte: start.format("Y-MM-DD"), $lte: end.format("Y-MM-DD") }
       }
     },
-    { $group: { _id: null, users: { $addToSet: "$customer" } } }
+    {
+      $group: {
+        _id: null,
+        users: { $addToSet: "$customer" },
+        visits: { $sum: 1 },
+        adults: { $sum: "$adultsCount" },
+        kids: { $sum: "$kidsCount" }
+      }
+    }
   ]);
 
   let s = start;
-  console.log(start.format("Y-MM-DD"), users.length);
-  while (s.toDate() < new Date()) {
-    s = s.add(1, "month");
-    const e = s.clone().endOf("month");
-    const [{ users: returnUsers } = { users: [] }] =
-      await BookingModel.aggregate([
-        {
-          $match: {
-            customer: { $in: users },
-            type: Scene.PLAY,
-            status: { $ne: BookingStatus.CANCELED },
-            date: { $gte: s.format("Y-MM-DD"), $lte: e.format("Y-MM-DD") }
-          }
-        },
-        { $group: { _id: null, users: { $addToSet: "$customer" } } }
-      ]);
-    console.log(s.format("Y-MM-DD"), returnUsers.length || 0);
+  console.log(start.format("Y-MM-DD"), users.length, visits, adults, kids);
+  while (s.toDate() < new Date("2021/07/01")) {
+    s = s.add(1, tick);
+    if (s.valueOf() >= new Date("2021/07/01").valueOf()) continue;
+    const e = s.clone().endOf(tick);
+    const [
+      {
+        users: returnUsers,
+        visits: returnVisits,
+        adults: returnAdults,
+        kids: returnKids
+      } = { users: [], visits: 0, adults: 0, kids: 0 }
+    ] = await BookingModel.aggregate([
+      {
+        $match: {
+          customer: { $in: users },
+          type: Scene.PLAY,
+          status: { $ne: BookingStatus.CANCELED },
+          date: { $gte: s.format("Y-MM-DD"), $lte: e.format("Y-MM-DD") }
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          users: { $addToSet: "$customer" },
+          visits: { $sum: 1 },
+          adults: { $sum: "$adultsCount" },
+          kids: { $sum: "$kidsCount" }
+        }
+      }
+    ]);
+    console.log(
+      s.format("Y-MM-DD"),
+      returnUsers.length || 0,
+      returnVisits || 0,
+      returnAdults || 0,
+      returnKids || 0
+    );
   }
 }
