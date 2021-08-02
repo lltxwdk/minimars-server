@@ -103,14 +103,11 @@ interface Product {
   attribute4: string;
 }
 
-type ProductWithImage = Product & {
-  imageUrl?: string;
-  productBarcode?: string;
-};
-
 interface FlavorGroup {
   uid: string;
   name: string;
+  multiple: boolean;
+  required: boolean;
   flavors: {
     uid: string;
     name: string;
@@ -582,9 +579,15 @@ export default class Pospal {
           if (!attributePackage) return groups;
           let flavorGroup = groups.find(g => g.uid === attributePackage.uid);
           if (!flavorGroup) {
+            const required =
+              (((attributePackage.packageType - 1) >> (2 - 1)) & 1) === 1;
+            const multiple =
+              (((attributePackage.packageType - 1) >> (1 - 1)) & 1) === 0;
             flavorGroup = {
               uid: attributePackage.uid,
               name: attributePackage.packageName,
+              required,
+              multiple,
               flavors: []
             };
             groups.push(flavorGroup);
