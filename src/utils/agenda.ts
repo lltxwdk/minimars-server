@@ -612,6 +612,17 @@ export const initAgenda = async () => {
     done();
   });
 
+  agenda.define("sync full day pospal tickets", async (job, done) => {
+    console.log(`[CRO] Running '${job.attrs.name}'...`);
+    const stores = await StoreModel.find();
+    for (const store of stores) {
+      const today = moment().format("YYYY-MM-DD");
+      await store.syncPospalTickets(today, today);
+    }
+    console.log(`[CRO] Finished '${job.attrs.name}'.`);
+    done();
+  });
+
   agenda.define("sync pospal tickets", async (job, done) => {
     // console.log(`[CRO] Running '${job.attrs.name}'...`);
     if (process.env.DISABLE_POSPAL_SYNC) {
@@ -834,6 +845,7 @@ export const initAgenda = async () => {
     agenda.every("* * * * *", "sync pospal tickets");
     agenda.every("0 4 1 * *", "generate period card revenue");
     agenda.every("15 11,16,23 * * *", "sync pospal menus");
+    agenda.every("45 23 * * *", "sync full day pospal tickets");
   });
 
   agenda.on("error", err => {
