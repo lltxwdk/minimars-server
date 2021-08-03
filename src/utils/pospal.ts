@@ -696,4 +696,29 @@ export default class Pospal {
       //
     }
   }
+
+  async queryAllPromotions(postBackParameter?: {
+    parameterType: string;
+    parameterValue: string;
+  }): Promise<Member[]> {
+    console.log(`[PS${this.storeCode}] Query all customers.`);
+    const data: {
+      postBackParameter: {
+        parameterType: string;
+        parameterValue: string;
+      };
+      result: Member[];
+      pageSize: number;
+    } = await this.post("promotionOpenApi/queryPromotionPages", {
+      postBackParameter
+    });
+    let promotions = data.result;
+    if (data.result.length >= data.pageSize) {
+      const nextPageResult = await this.queryAllCustomers(
+        data.postBackParameter
+      );
+      promotions = promotions.concat(nextPageResult);
+    }
+    return promotions;
+  }
 }
