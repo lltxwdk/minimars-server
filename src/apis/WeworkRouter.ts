@@ -2,24 +2,18 @@ import { Router, Request, Response } from "express";
 import handleAsyncErrors from "../utils/handleAsyncErrors";
 import crypto from "crypto";
 import xml2js from "xml2js";
-// @ts-ignore
-import aes256 from "aes256";
 import {
-  ApprovalDetail,
   ApprovalNotify,
   ApprovalStatus,
   ApprovalStatusChangeEventText,
-  ApprovalStatusText,
   getApprovalDetail,
   handleCancelBooking,
   sendMessage
 } from "../utils/wework";
-import BookingModel from "../models/Booking";
 
 const {
   WEWORK_APPROVAL_ENCODEING_AES_KEY: aesKeyBase64 = "",
-  WEWORK_APPROVAL_TEMPLATE_ID_CANCEL_PLAY: templateIdCancelPlay = "",
-  WEWORK_APPROVAL_TEMPLATE_ID_CANCEL_FOOD: templateIdCancelFood = ""
+  WEWORK_APPROVAL_TEMPLATE_ID_CANCEL_BOOKING: templateIdCancelBooking = ""
 } = process.env;
 
 export default (router: Router) => {
@@ -53,12 +47,8 @@ export default (router: Router) => {
         const approval = await getApprovalDetail(notify.ApprovalInfo.SpNo);
         try {
           switch (notify.ApprovalInfo.TemplateId) {
-            case templateIdCancelPlay: {
+            case templateIdCancelBooking: {
               await handleCancelBooking(approval, notify.AgentID);
-              break;
-            }
-            case templateIdCancelFood: {
-              await handleCancelBooking(approval, notify.AgentID, false);
               break;
             }
           }

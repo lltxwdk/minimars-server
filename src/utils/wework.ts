@@ -1,6 +1,7 @@
 import Axios, { AxiosRequestConfig } from "axios";
 import { isValidObjectId } from "mongoose";
 import BookingModel, { BookingStatus } from "../models/Booking";
+import { Scene } from "../models/Payment";
 import { isValidHexObjectId, sleep } from "./helper";
 
 const corpId = process.env.WEWORK_CORP_ID || "";
@@ -89,8 +90,7 @@ export async function sendMessage(
 
 export async function handleCancelBooking(
   approval: ApprovalDetail,
-  agentId: string,
-  requirePendingRefund = true
+  agentId: string
 ) {
   const bookingId = approval.getTextField("系统订单号");
   if (!isValidHexObjectId(bookingId || "")) {
@@ -104,7 +104,10 @@ export async function handleCancelBooking(
   if (booking.customer?.mobile !== mobile) {
     throw new Error(`客人手机号${mobile || ""}校验失败，订单和手机号不匹配`);
   }
-  if (booking.status !== BookingStatus.PENDING_REFUND && requirePendingRefund) {
+  if (
+    booking.status !== BookingStatus.PENDING_REFUND &&
+    booking.type === Scene.PLAY
+  ) {
     throw new Error(`订单状态不是“待退款”`);
   }
   if (approval.sp_status === ApprovalStatus.APPROVED) {
