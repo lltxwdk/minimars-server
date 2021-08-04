@@ -6,6 +6,7 @@ import JSONBigInt from "json-bigint";
 import userModel, { User } from "../models/User";
 import { Booking } from "../models/Booking";
 import { PaymentGateway } from "../models/Payment";
+import StoreModel from "../models/Store";
 
 export interface Ticket {
   cashierUid: string;
@@ -617,6 +618,42 @@ export default class Pospal {
     const [restaurantAreaName, restaurantTableName] =
       booking.tableId.split(".");
 
+    const items = booking.items.map(i => ({
+      productUid: i.productUid,
+      quantity: i.quantity,
+      manualSellPrice: i.sellPrice,
+      comment: i.comment || ""
+    }));
+
+    const store = await StoreModel.findById(booking.store).select("+foodMenu");
+    const foodMenu = store?.foodMenu;
+    if (!foodMenu) throw new Error("invalid_food_menu");
+
+    const productNameMap: Record<string, ProductInCustomerMenu> = {};
+    foodMenu.forEach(cat => {
+      cat.products.forEach(p => {
+        productNameMap[p.name] = p;
+      });
+    });
+
+    booking.items.forEach(item => {
+      const pnames = (item.comment || "").split(" ");
+      pnames.forEach(name => {
+        if (productNameMap[name]) {
+          const p = productNameMap[name];
+          console.log(
+            `[PSP${this.storeCode}] Found flavor as product: ${item.name}->${p.name}.`
+          );
+          items.push({
+            productUid: p.uid,
+            quantity: item.quantity,
+            manualSellPrice: p.sellPrice,
+            comment: "套餐内含"
+          });
+        }
+      });
+    });
+
     const data = {
       payMethod: "payCode_17",
       customerNumber: booking.customer.pospalId,
@@ -637,12 +674,7 @@ export default class Pospal {
         .reduce((amount, p) => amount + p.amount, 0)
         .toFixed(2),
       daySeq: booking.tableId.split(".")[1] + "-" + moment().format("HHmmss"),
-      items: booking.items.map(i => ({
-        productUid: i.productUid,
-        quantity: i.quantity,
-        manualSellPrice: i.sellPrice,
-        comment: i.comment || ""
-      }))
+      items
     };
 
     console.log(
