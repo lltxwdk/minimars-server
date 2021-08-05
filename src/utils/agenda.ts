@@ -845,7 +845,8 @@ export const initAgenda = async () => {
     agenda.every("0 16,20,22 * * *", "sync pospal customers");
     agenda.every("* * * * *", "sync pospal tickets");
     agenda.every("0 4 1 * *", "generate period card revenue");
-    agenda.every("15 11,16,23 * * *", "sync pospal menus");
+    agenda.every("0 14,17 * * *", "sync pospal menus");
+    agenda.every("30 10 * * *", "sync pospal menus");
     agenda.every("45 23 * * *", "sync full day pospal tickets");
   });
 
