@@ -554,6 +554,7 @@ export const initAgenda = async () => {
       ? new Date(start)
       : moment(clearDate).subtract(1, "month").startOf("month").toDate();
     const cards = await CardModel.find({
+      status: { $ne: CardStatus.CANCELED },
       type: Scene.PERIOD,
       end: { $gte: periodStart },
       start: { $lte: periodEnd }
