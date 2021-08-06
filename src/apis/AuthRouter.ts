@@ -80,7 +80,7 @@ export default (router: Router) => {
 
   router.route("/auth/token/:userId").get(
     handleAsyncErrors(async (req: Request, res: Response) => {
-      if (req.user.can(Permission.BOSSBOARD)) {
+      if (!req.user.can(Permission.DEVELOP)) {
         throw new HttpError(403);
       }
       const user = await UserModel.findOne({ _id: req.params.userId });
