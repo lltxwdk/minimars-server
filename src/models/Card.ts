@@ -283,12 +283,7 @@ export class Card {
         store:
           atReceptionStore?.id ||
           (card.stores.length === 1 ? card.stores[0] : undefined),
-        amount:
-          amount === undefined
-            ? DEBUG
-              ? totalPayAmount / 1e4
-              : totalPayAmount
-            : amount,
+        amount: amount === undefined ? totalPayAmount : amount,
         title,
         attach,
         card: card.id,
@@ -335,10 +330,14 @@ export class Card {
       const card = await CardModel.findById(p.card);
       if (!card) throw new Error("invalid_card");
 
-      const debt =
-        card.timesLeft !== undefined && card.times
-          ? -((card.timesLeft / card.times) * card.price).toFixed(8)
-          : -card.price;
+      let debt = amountToRefund;
+
+      if (card.times !== undefined) {
+        debt =
+          card.timesLeft !== undefined && card.times
+            ? -((card.timesLeft / card.times) * card.price).toFixed(8)
+            : -card.price;
+      }
 
       // refund payment by refundAmount
       const refundPayment = new PaymentModel({
@@ -363,7 +362,7 @@ export class Card {
     this.refundSuccess();
   }
 
-  async refundSuccess(this: DocumentType<Card>) {
+  refundSuccess(this: DocumentType<Card>) {
     this.status = CardStatus.CANCELED;
     console.log(`[CRD] Refund success ${this.id}.`);
     if (this.timesLeft) {
@@ -381,9 +380,6 @@ export class Card {
       console.log(`[CRD] Refund ${this.id}.`);
       // we don't directly change status to canceled, will auto change on refund fullfil
       await this.createRefundPayment(refundAmount);
-      if (!this.payments.filter(p => p.amount < 0).some(p => !p.paid)) {
-        this.refundSuccess();
-      }
     } else {
       this.refundSuccess();
     }
