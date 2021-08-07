@@ -129,6 +129,7 @@ export interface ProductInCustomerMenu {
   enable?: number;
   unitName?: string;
   flavorGroups?: FlavorGroup[];
+  tags?: string[];
 }
 
 export type Menu = (Category & { products: ProductInCustomerMenu[] })[];
@@ -555,9 +556,10 @@ export default class Pospal {
         if (!extraInfo) return productWithImage;
 
         const unitName = extraInfo.unitName;
+        const tags = extraInfo.tagNames;
 
         if (!extraInfo.attributes) {
-          return { ...productWithImage, unitName };
+          return { ...productWithImage, unitName, tags };
         }
 
         const productAttributes = extraInfo.attributes
@@ -603,7 +605,7 @@ export default class Pospal {
           return groups;
         }, [] as FlavorGroup[]);
 
-        return { ...productWithImage, unitName, flavorGroups };
+        return { ...productWithImage, unitName, tags, flavorGroups };
       });
     });
     this.menu = menu;
