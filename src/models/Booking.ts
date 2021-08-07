@@ -656,7 +656,10 @@ export class Booking extends TimeStamps {
       }
     }
 
-    if (paymentGateway === PaymentGateway.Points && !amountInPoints) {
+    if (
+      paymentGateway === PaymentGateway.Points &&
+      amountInPoints === undefined
+    ) {
       throw new Error("points_gateway_not_supported");
     }
 
