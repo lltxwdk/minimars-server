@@ -98,14 +98,6 @@ export default async (
       0
     );
 
-  const foodBookingsCount = bookingsPaid.filter(
-    b => b.type === Scene.FOOD
-  ).length;
-
-  const mallBookingsCount = bookingsPaid.filter(
-    b => b.type === Scene.MALL
-  ).length;
-
   const customersByType = bookingsPaid
     .filter(b => b.type === Scene.PLAY)
     .reduce(
@@ -140,6 +132,12 @@ export default async (
         other: { adultsCount: 0, kidsCount: 0 }
       }
     );
+
+  const bookingsCountByType = bookingsPaid.reduce((map, booking) => {
+    if (!map[booking.type]) map[booking.type] = 0;
+    map[booking.type]++;
+    return map;
+  }, {} as Record<Scene, number>);
 
   const flowAmountByGateways: { [gateway: string]: number } = payments
     .filter(p => flowGateways.includes(p.gateway))
@@ -430,8 +428,7 @@ export default async (
     foodAmount,
     mallAmount,
     customerCount,
-    foodBookingsCount,
-    mallBookingsCount,
+    bookingsCountByType,
     flowAmountByGateways,
     flowAmountByScenes,
     flowAmountByStores,
