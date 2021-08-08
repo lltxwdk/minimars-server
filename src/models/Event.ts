@@ -13,27 +13,33 @@ import { Store } from "./Store";
 import autoPopulate from "./plugins/autoPopulate";
 import {
   appendResizeHtmlImage,
-  appendResizeImageUrl,
-  removeResizeImageUrl,
   removeResizeHtmlImage
 } from "../utils/imageResize";
 import moment from "moment";
+import HttpError from "../utils/HttpError";
 
-@pre("validate", function (next) {
-  const event = this as DocumentType<Event>;
+@pre("validate", function (this: DocumentType<Event>) {
   if (
-    event.kidsCountMax !== null &&
-    (event.kidsCountLeft === null || event.kidsCountLeft === undefined)
+    this.kidsCountMax !== null &&
+    (this.kidsCountLeft === null || this.kidsCountLeft === undefined)
   ) {
-    event.kidsCountLeft = event.kidsCountMax;
+    this.kidsCountLeft = this.kidsCountMax;
   }
-  if (event.kidsCountLeft !== null && event.kidsCountMax === null) {
-    event.kidsCountLeft = null;
+  if (this.kidsCountLeft !== null && this.kidsCountMax === null) {
+    this.kidsCountLeft = null;
   }
-  if (event.tags) {
-    event.tags = event.tags.map(t => t.toLowerCase());
+  if (this.tags) {
+    this.tags = this.tags.map(t => t.toLowerCase());
   }
-  next();
+  if (this.priceInPoints === null) {
+    this.priceInPoints = undefined;
+  }
+  if (this.price === null) {
+    this.price = undefined;
+  }
+  if (this.priceInPoints === undefined && this.price === undefined) {
+    throw new HttpError(400, "积分和收款售价至少填写一项");
+  }
 })
 @plugin(updateTimes)
 @plugin(autoPopulate, [{ path: "store", select: "-content" }])
@@ -45,7 +51,7 @@ export class Event {
   @prop({ type: String })
   tags!: string[];
 
-  @prop()
+  @prop({ required: true })
   ipCharacter!: string;
 
   @prop({

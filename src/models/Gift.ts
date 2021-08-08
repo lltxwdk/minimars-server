@@ -2,7 +2,8 @@ import {
   prop,
   getModelForClass,
   plugin,
-  DocumentType
+  DocumentType,
+  pre
 } from "@typegoose/typegoose";
 import updateTimes from "./plugins/updateTimes";
 import autoPopulate from "./plugins/autoPopulate";
@@ -13,7 +14,19 @@ import {
   removeResizeImageUrl,
   removeResizeHtmlImage
 } from "../utils/imageResize";
+import HttpError from "../utils/HttpError";
 
+@pre("validate", function (this: DocumentType<Gift>) {
+  if (this.priceInPoints === null) {
+    this.priceInPoints = undefined;
+  }
+  if (this.price === null) {
+    this.price = undefined;
+  }
+  if (this.priceInPoints === undefined && this.price === undefined) {
+    throw new HttpError(400, "积分和收款售价至少填写一项");
+  }
+})
 @plugin(updateTimes)
 @plugin(autoPopulate, [{ path: "store", select: "-content" }])
 export class Gift {

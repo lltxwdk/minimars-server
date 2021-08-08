@@ -13,7 +13,6 @@ import autoPopulate from "./plugins/autoPopulate";
 import HttpError from "../utils/HttpError";
 import moment from "moment";
 import { Scene } from "./Payment";
-import { Booking } from "./Booking";
 import {
   appendResizeImageUrl,
   removeResizeImageUrl
@@ -75,6 +74,12 @@ class BalancePriceGroup {
   if (this.end) {
     this.end = moment(this.end).endOf("day").toDate();
   }
+  if (this.fixedPrice === null) {
+    this.fixedPrice = undefined;
+  }
+  if (this.overPrice === null) {
+    this.overPrice = undefined;
+  }
   next();
 })
 export class CardType {
@@ -111,8 +116,8 @@ export class CardType {
   @prop({ type: Boolean })
   isGift?: boolean;
 
-  @prop({ type: Boolean })
-  isContract?: boolean;
+  @prop({ type: Boolean, default: true })
+  isContract: boolean = true;
 
   @prop({ type: Boolean, default: false })
   openForClient: boolean = false;

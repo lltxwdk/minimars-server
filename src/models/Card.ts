@@ -21,8 +21,6 @@ import {
   removeResizeImageUrl
 } from "../utils/imageResize";
 
-const { DEBUG } = process.env;
-
 export enum CardStatus {
   PENDING = "pending", // pending payment for the card
   VALID = "valid", // paid gift card before activated
@@ -53,6 +51,11 @@ export class BalanceGroup {
     select: "-customer"
   }
 ])
+@pre("validate", function (this: DocumentType<Card>) {
+  if (!this.isContract) {
+    this.isContract = undefined;
+  }
+})
 @pre("save", async function (this: DocumentType<Card>, next) {
   if (["times", "coupon", "period"].includes(this.type)) {
     if (
