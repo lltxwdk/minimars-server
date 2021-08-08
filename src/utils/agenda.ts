@@ -9,7 +9,7 @@ import Gift from "../models/Gift";
 import CardType from "../models/CardType";
 import Event from "../models/Event";
 import Post from "../models/Post";
-import Store from "../models/Store";
+import Store, { storeMap } from "../models/Store";
 import UserModel, { User } from "../models/User";
 import configModel, { Config } from "../models/Config";
 import CardTypeModel from "../models/CardType";
@@ -742,6 +742,7 @@ export const initAgenda = async () => {
           const menu = await pospal.getMenu();
           store.foodMenu = menu;
           await store.save();
+          storeMap[store.code] = store;
           console.log(`[CRO] Store ${store.code} menu updated.`);
         } catch (err) {
           console.error(`[CRO] ${err.message}`);
