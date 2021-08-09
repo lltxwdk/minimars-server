@@ -80,7 +80,8 @@ export default (router: Router) => {
           $match: {
             timesLeft: { $gt: 0 },
             type: "times",
-            expiresAt: { $gte: new Date() }
+            expiresAt: { $gte: new Date() },
+            isContract: { $ne: true }
           }
         },
         {
