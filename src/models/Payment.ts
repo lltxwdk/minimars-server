@@ -404,7 +404,8 @@ export const flowGateways = [
   PaymentGateway.WechatPay,
   PaymentGateway.Alipay,
   PaymentGateway.UnionPay,
-  PaymentGateway.Mall
+  PaymentGateway.Mall,
+  PaymentGateway.MallPos
 ];
 
 export const cardCouponGateways = [
