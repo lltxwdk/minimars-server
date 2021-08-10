@@ -233,6 +233,7 @@ export class Store {
     let insertBookings = 0;
     for (const ticket of result) {
       if (ticket.invalid) {
+        console.log(`[STR] ${this.code}: ticket ${ticket.sn} is invalid.`);
         continue;
       }
       try {
