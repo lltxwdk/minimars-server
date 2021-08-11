@@ -137,7 +137,7 @@ class FoodItem {
         }
         return false;
       });
-      if (!matchCategory) {
+      if (!matchCategory && this.tableId) {
         throw new HttpError(404, `未找到餐品编号：${item.productUid}`);
       }
     });
