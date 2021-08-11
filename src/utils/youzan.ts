@@ -359,9 +359,13 @@ async function createCard(trade: any) {
       );
     }
   }
-  sleep(5000).then(() => {
-    virtualCodeApply(tid);
-    console.log("[YZN] Code applied:", tid);
+  sleep(5000).then(async () => {
+    try {
+      await virtualCodeApply(tid);
+      console.log("[YZN] Code applied:", tid);
+    } catch (e) {
+      //
+    }
   });
 }
 
