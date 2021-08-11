@@ -351,7 +351,7 @@ export const initAgenda = async () => {
           }
           console.error(
             `[CRO] User points mismatch: ${u.id} ${u.name || ""} ${
-              u.mobile
+              u.mobile || "UNKNOWN"
             } calc ${customerPointsMap[u.id]}, stored ${storedPoints}${
               fix ? ", fixed" : ""
             }.`
