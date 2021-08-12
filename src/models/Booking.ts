@@ -1011,8 +1011,12 @@ export class Booking extends TimeStamps {
         n = this.kidsCount / this.coupon.kidsCount;
       }
 
-      if (this.card && this.card.cardsRewarded) {
-        n = 0;
+      if (this.card) {
+        if (this.card.rewardCardEveryTime) {
+          n = this.kidsCount;
+        } else if (this.card.cardsRewarded) {
+          n = 0;
+        }
       }
 
       for (let i = 0; i < n; i++) {

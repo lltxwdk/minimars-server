@@ -158,6 +158,9 @@ export class CardType {
   @prop()
   rewardCardTypes?: string;
 
+  @prop({ type: Boolean })
+  rewardCardEveryTime?: boolean;
+
   // type-related properties below
   @prop({ type: Number })
   times?: number;
