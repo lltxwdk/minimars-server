@@ -83,6 +83,14 @@ export default async function playground() {
     // }
     // const approval = await getApprovalDetail("202107170041");
     // console.log(JSON.stringify(approval));
+    // saveCardTypeQr("gzr-888", "TS");
+    // saveCardTypeQr("gzr-688", "TS");
+    // saveCardTypeQr("gzr-888", "JN");
+    // saveCardTypeQr("gzr-688", "JN");
+    // saveCardTypeQr("gzr-888", "BY");
+    // saveCardTypeQr("gzr-688", "BY");
+    // saveCardTypeQr("gzr-888", "HX");
+    // saveCardTypeQr("gzr-688", "HX");
   } catch (e) {
     console.error(e);
   }
@@ -102,6 +110,23 @@ async function saveSerialTableQrs(
 async function saveTableQr(s: string, a: string, t: string) {
   const code = `/pages/food/index?s=${s}&t=${a}.${t}`;
   const path = `${s}/${a}.${t}.jpg`;
+  console.log(code, path);
+  await getQrcode(code, path);
+}
+
+async function saveCardTypeQr(slug: string, storeCode?: string) {
+  const card = await CardTypeModel.findOne({ slug });
+  if (!card) throw new Error("card_type_not_found");
+  let code = `/pages/index/index?cardSell=${card.id}`;
+  let filename = slug;
+
+  if (storeCode) {
+    const store = await StoreModel.findOne({ code: storeCode });
+    if (!store) throw new Error("store_not_found");
+    code += `&atStore=${store.id}`;
+    filename += `-${storeCode}`;
+  }
+  const path = filename + ".jpg";
   console.log(code, path);
   await getQrcode(code, path);
 }
