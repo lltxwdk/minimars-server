@@ -477,6 +477,7 @@ export default (router: Router) => {
         // TODO restrict for roles
 
         const statusWas = booking.status;
+        const cardWas = booking.card;
         const facesWas = booking.faces?.join();
 
         booking.set(req.body as BookingPutBody);
@@ -484,6 +485,7 @@ export default (router: Router) => {
         await booking.populate("customer").execPopulate();
         await booking.populate("store").execPopulate();
 
+        // cancel booking
         if (
           statusWas !== BookingStatus.CANCELED &&
           booking.status === BookingStatus.CANCELED
@@ -548,6 +550,7 @@ export default (router: Router) => {
           }
         }
 
+        // revoke pending refund booking
         if (
           statusWas === BookingStatus.PENDING_REFUND &&
           booking.status === booking.statusWas
@@ -560,19 +563,112 @@ export default (router: Router) => {
           );
         }
 
+        // check-in
         if (
           statusWas !== BookingStatus.IN_SERVICE &&
           booking.status === BookingStatus.IN_SERVICE
         ) {
-          booking.checkIn();
+          await booking.checkIn();
         }
 
+        // check-out
         if (
           statusWas === BookingStatus.IN_SERVICE &&
           booking.status === BookingStatus.FINISHED &&
           !booking.checkOutAt
         ) {
           booking.checkOutAt = moment().format("HH:mm:ss");
+        }
+
+        // upgrade card
+        if (!cardWas && booking.card) {
+          const card = await CardModel.findById(booking.card);
+          const cardPayments = await PaymentModel.find({
+            card: booking.card,
+            scene: Scene.CARD
+          });
+          if (cardPayments.length !== 1) {
+            throw new HttpError(400, "卡购买记录不唯一");
+          }
+          const cardPayment = cardPayments[0];
+          if (!card) throw new Error("card_not_found");
+          if (
+            card.type !== "times" ||
+            !card.times ||
+            !card.timesLeft ||
+            !cardPayment.times ||
+            booking.type !== Scene.PLAY ||
+            !booking.kidsCount ||
+            !booking.adultsCount
+          ) {
+            throw new HttpError(400, "目前仅支持单次门票升级为次卡");
+          }
+
+          if (card.maxKids && card.maxKids < booking.kidsCount) {
+            throw new HttpError(
+              400,
+              `该卡最多支持${card.maxKids}名儿童入场，无法升级`
+            );
+          }
+
+          if (
+            card.freeParentsPerKid &&
+            card.freeParentsPerKid * booking.kidsCount < booking.adultsCount
+          ) {
+            throw new HttpError(
+              400,
+              `该卡最多支持每儿童${card.freeParentsPerKid}名免费陪同成人，无法升级`
+            );
+          }
+
+          // 4-payment plan
+          await PaymentModel.updateMany(
+            { booking },
+            { $set: { refunded: true } }
+          );
+
+          // refund booking amountPaid with card method
+          const amendPayment = new PaymentModel({
+            scene: Scene.PLAY,
+            customer: booking.customer,
+            store: booking.store,
+            amount: -(booking.amountPaid || 0),
+            title: `升级使用${card.title}支付`,
+            booking,
+            card,
+            gateway: cardPayment.gateway
+          });
+          await amendPayment.save();
+
+          const cardBookingPayment = new PaymentModel({
+            scene: Scene.PLAY,
+            customer: booking.customer,
+            store: booking.store,
+            amount: (booking.kidsCount / card.times) * card.price,
+            title: `升级使用${card.title}支付`,
+            booking,
+            card,
+            times: -booking.kidsCount,
+            gateway: card.isContract
+              ? PaymentGateway.Contract
+              : PaymentGateway.Card,
+            gatewayData: { cardId: card.id }
+          });
+          await cardBookingPayment.save();
+
+          // 2-payment plan
+          // amend booking payment to use this card, and write-off times
+          // amend card payment amount
+          // card.timesLeft -= booking.kidsCount;
+          // cardPayment.amount = cardPayment.amount - (booking.amountPaid || 0);
+          // cardPayment.debt = (card.timesLeft / card.times) * cardPayment.debt;
+          // cardPayment.assets = cardPayment.amount;
+          // cardPayment.revenue = +(
+          //   cardPayment.assets - cardPayment.debt
+          // ).toFixed(10);
+          // cardPayment.times = cardPayment.times - booking.kidsCount;
+          // await cardPayment.save();
+          // await card.save();
         }
 
         if (facesWas !== booking.faces?.join()) {
