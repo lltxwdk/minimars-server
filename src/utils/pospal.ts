@@ -130,6 +130,7 @@ export interface ProductInCustomerMenu {
   unitName?: string;
   flavorGroups?: FlavorGroup[];
   tags?: string[];
+  isSpecialOffer?: boolean;
 }
 
 export type Menu = (Category & { products: ProductInCustomerMenu[] })[];

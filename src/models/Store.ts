@@ -22,6 +22,7 @@ import Pospal, { Ticket, Menu } from "../utils/pospal";
 import PaymentModel, { PaymentGateway, Scene } from "./Payment";
 import UserModel from "./User";
 import WebSocket from "ws";
+import { config } from "./Config";
 
 export const storeMap: { [id: string]: DocumentType<Store> } = {};
 export const storeDoors: { [storeId: string]: Door[] } = {};
@@ -133,6 +134,46 @@ export class Store {
 
   @prop({ type: Object, select: false })
   foodMenu?: Menu;
+
+  get customerFoodMenu() {
+    if (!this.foodMenu) return [];
+    this.foodMenu.forEach(cat => {
+      cat.products.forEach(product => {
+        if (
+          config.specialOfferFoodNames?.includes(product.name) ||
+          config.specialOfferFoodNames?.includes(cat.name)
+        ) {
+          product.isSpecialOffer = true;
+        }
+      });
+    });
+    const menu = this.foodMenu
+      .map(cat => ({
+        ...cat,
+        order: config.foodMenuOrder?.[cat.name] || 0
+      }))
+      .filter(cat => {
+        if (cat.order < 0) return;
+        cat.products = cat.products
+          .filter(p => p.enable && p.sellPrice > 0 && p.stock > 0)
+          .map(p => ({
+            uid: p.uid,
+            categoryUid: p.categoryUid,
+            name: p.name,
+            imageUrl: p.imageUrl,
+            description: p.description,
+            sellPrice: p.sellPrice,
+            stock: p.stock,
+            unitName: p.unitName,
+            flavorGroups: p.flavorGroups,
+            isSpecialOffer: p.isSpecialOffer
+          }));
+        return cat.products.length;
+      })
+      .sort((a, b) => b.order - a.order);
+
+    return menu;
+  }
 
   async authDoors(this: DocumentType<Store>, no: number) {
     if (no >= Math.pow(2, 32) || no <= 0) {

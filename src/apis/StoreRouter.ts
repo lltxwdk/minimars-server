@@ -131,7 +131,6 @@ export default (router: Router) => {
   router
     .route("/store-menu")
 
-    // create a store
     .get(
       handleAsyncErrors(async (req: Request, res: Response) => {
         let store: DocumentType<Store> | null = null;
@@ -166,31 +165,10 @@ export default (router: Router) => {
           store.foodMenu = menu;
           await store.save();
         }
-        const menu = store.foodMenu
-          .map(cat => ({
-            ...cat,
-            order: config.foodMenuOrder?.[cat.name] || 0
-          }))
-          .filter(cat => {
-            if (cat.order < 0) return;
-            cat.products = cat.products
-              .filter(p => p.enable && p.sellPrice > 0 && p.stock > 0)
-              .map(p => ({
-                uid: p.uid,
-                categoryUid: p.categoryUid,
-                name: p.name,
-                imageUrl: p.imageUrl,
-                description: p.description,
-                sellPrice: p.sellPrice,
-                stock: p.stock,
-                unitName: p.unitName,
-                flavorGroups: p.flavorGroups
-              }));
-            return cat.products.length;
-          })
-          .sort((a, b) => b.order - a.order);
+        const menu = store.customerFoodMenu;
         const storeObject = store.toJSON();
         delete storeObject.foodMenu;
+        delete storeObject.customerFoodMenu;
         res.json({
           store: storeObject,
           tableId,
