@@ -50,6 +50,7 @@ export class Config {
   onWeekends?: string[];
   bookableDays?: number;
   foodMenuOrder?: Record<string, number>;
+  specialOfferFoodNames?: string[];
   welcomeRewardCard?: { slug: string };
   ipCharacters?: {
     name: string;

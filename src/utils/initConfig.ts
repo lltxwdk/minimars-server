@@ -32,6 +32,7 @@ const initConfig: Config = {
   onWeekends: [],
   bookableDays: 15,
   foodMenuOrder: { 饮品: 100 },
+  specialOfferFoodNames: ["辣妈亲子套餐"],
   welcomeRewardCard: { slug: "welcome" },
   ipCharacters: [
     { name: "alfie", workshopName: "科学实验室", coverTextColor: "#646A6D" },
