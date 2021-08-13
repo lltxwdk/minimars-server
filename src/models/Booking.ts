@@ -64,6 +64,7 @@ export class BookingPrice {
   price = 0;
   priceInPoints?: number;
   coupon?: Coupon;
+  nonSpecialOfferPrice?: number;
 }
 
 type Amounts = Required<
@@ -86,6 +87,9 @@ class FoodItem {
 
   @prop({ type: Number })
   sellPrice?: number;
+
+  @prop({ type: Boolean })
+  isSpecialOffer?: boolean;
 
   @prop({ type: String })
   productCategory?: string;
@@ -124,7 +128,7 @@ class FoodItem {
     const store = storeMap[this.store?.id || ""];
     if (!store || !store.foodMenu)
       throw new Error("invalid_food_booking_store_menu");
-    const menu = store.foodMenu;
+    const menu = store.customerFoodMenu;
     this.items.forEach(item => {
       const matchCategory = menu.find(cat => {
         const product = cat.products.find(p => p.uid === item.productUid);
@@ -133,6 +137,7 @@ class FoodItem {
           item.productImageUrl = product.imageUrl;
           item.productCategory = cat.name;
           item.sellPrice = product.sellPrice;
+          item.isSpecialOffer = product.isSpecialOffer;
           return true;
         }
         return false;
@@ -412,37 +417,13 @@ export class Booking extends TimeStamps {
         bookingPrice.price = this.gift.price * this.quantity;
       }
     } else if (this.type === "food") {
-      if (!this.store) throw new Error("food_booking_missing_store");
-      const store = storeMap[this.store.id];
-      const menu = store.foodMenu;
-      if (!menu) throw new Error("food_menu_missing");
-      const products = menu.reduce(
-        (products, category) => products.concat(category.products),
-        [] as ProductInCustomerMenu[]
-      );
       if (this.items) {
-        for (const item of this.items) {
-          const product = products.find(p => p.uid === item.productUid);
-          if (!product) throw new Error("food_product_not_found");
-          bookingPrice.price = +(
-            bookingPrice.price +
-            product.sellPrice * item.quantity
-          ).toFixed(10);
-          if (item.comment) {
-            for (const flavorName of item.comment.split(" ")) {
-              product.flavorGroups?.forEach(g => {
-                g.flavors.forEach(f => {
-                  if (f.name === flavorName && f.extraPrice) {
-                    bookingPrice.price = +(
-                      bookingPrice.price +
-                      f.extraPrice * item.quantity
-                    ).toFixed(10);
-                  }
-                });
-              });
-            }
-          }
-        }
+        bookingPrice.price = +(
+          bookingPrice.price + this.calcItemPrice(this.items)
+        ).toFixed(2);
+        bookingPrice.nonSpecialOfferPrice = this.calcItemPrice(
+          this.items.filter(i => !i.isSpecialOffer)
+        );
       }
       if (this.card) {
         if (!this.populated("card")) {
@@ -477,15 +458,46 @@ export class Booking extends TimeStamps {
     return bookingPrice;
   }
 
+  calcItemPrice(items: FoodItem[]) {
+    if (!this.store) throw new Error("food_booking_missing_store");
+    const store = storeMap[this.store.id];
+    const menu = store.foodMenu;
+    if (!menu) throw new Error("food_menu_missing");
+    const products = menu.reduce(
+      (products, category) => products.concat(category.products),
+      [] as ProductInCustomerMenu[]
+    );
+    let price = 0;
+    for (const item of items) {
+      const product = products.find(p => p.uid === item.productUid);
+      if (!product) throw new Error("food_product_not_found");
+      price = +(price + product.sellPrice * item.quantity).toFixed(10);
+      if (item.comment) {
+        for (const flavorName of item.comment.split(" ")) {
+          product.flavorGroups?.forEach(g => {
+            g.flavors.forEach(f => {
+              if (f.name === flavorName && f.extraPrice) {
+                price = +(price + f.extraPrice * item.quantity).toFixed(10);
+              }
+            });
+          });
+        }
+      }
+    }
+    return price;
+  }
+
   async createPayment(
     this: DocumentType<Booking>,
     {
       paymentGateway,
       useBalance = true,
+      balanceAmount = undefined,
       atReception = false
     }: {
       paymentGateway?: PaymentGateway;
       useBalance?: boolean;
+      balanceAmount?: number;
       atReception?: boolean;
     },
     amount: number,
@@ -569,7 +581,10 @@ export class Booking extends TimeStamps {
       this.payments.push(couponPayment);
     }
     if (totalPayAmount && useBalance && this.customer?.balance) {
-      balancePayAmount = Math.min(totalPayAmount, this.customer.balance);
+      balancePayAmount = Math.min(
+        balanceAmount === undefined ? totalPayAmount : balanceAmount,
+        this.customer.balance
+      );
       const balancePayment = new PaymentModel({
         scene: this.type,
         customer: this.customer,

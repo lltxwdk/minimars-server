@@ -290,6 +290,7 @@ export default (router: Router) => {
             {
               paymentGateway,
               useBalance: query.useBalance !== "false",
+              balanceAmount: bookingPrice.nonSpecialOfferPrice,
               atReception:
                 !req.user.can(Permission.BOOKING_ALL_STORE) &&
                 booking.customer.id !== req.user.id
@@ -739,6 +740,8 @@ export default (router: Router) => {
       if (!booking.checkInAt) {
         booking.checkInAt = moment().add(5, "minutes").format("HH:mm:ss");
       }
+
+      await booking.validate();
 
       try {
         const bookingPrice = await booking.calculatePrice();
