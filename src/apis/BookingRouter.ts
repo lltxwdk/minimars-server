@@ -257,6 +257,7 @@ export default (router: Router) => {
           if (!booking.price) {
             const card = await CardModel.findById(booking.card);
             if (
+              !booking.items &&
               card &&
               (card.fixedPrice === null || card.fixedPrice === undefined)
             ) {

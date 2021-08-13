@@ -444,8 +444,10 @@ export class Booking extends TimeStamps {
           }
         }
       }
-      if (this.card && !this.populated("card")) {
-        await this.populate("card").execPopulate();
+      if (this.card) {
+        if (!this.populated("card")) {
+          await this.populate("card").execPopulate();
+        }
         if (this.price) {
           bookingPrice.price = this.price;
         }
@@ -462,9 +464,6 @@ export class Booking extends TimeStamps {
         }
         if (this.card.type === "coupon" && this.card.fixedPrice) {
           bookingPrice.price = this.card.fixedPrice;
-        }
-        if (this.tableId && this.items) {
-          bookingPrice.price = 0.02;
         }
       }
     } else if (this.type === "party") {
