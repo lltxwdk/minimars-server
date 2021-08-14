@@ -124,6 +124,7 @@ class FoodItem {
 // @index({ date: 1, checkInAt: 1, customer: 1 }, { unique: true })
 @modelOptions({ options: { allowMixed: Severity.ALLOW } })
 @pre("validate", function (this: DocumentType<Booking>) {
+  if (!this.card) this.card = undefined;
   if (this.type === Scene.FOOD && this.items && this.isModified("items")) {
     const store = storeMap[this.store?.id || ""];
     if (!store || !store.foodMenu)
