@@ -155,7 +155,15 @@ export class Store {
       .filter(cat => {
         if (cat.order < 0) return;
         cat.products = cat.products
-          .filter(p => p.enable && p.sellPrice > 0 && p.stock > 0)
+          .filter(p => {
+            const enabled = p.enable && p.sellPrice > 0 && p.stock > 0;
+            if (!enabled) {
+              console.log(
+                `[DEBUG] ${this.code} product not available: ${p.name}, ${p.enable} ${p.sellPrice} ${p.stock}.`
+              );
+            }
+            return enabled;
+          })
           .map(p => ({
             uid: p.uid,
             categoryUid: p.categoryUid,

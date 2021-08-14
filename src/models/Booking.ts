@@ -144,7 +144,7 @@ class FoodItem {
         return false;
       });
       if (!matchCategory && this.tableId) {
-        throw new HttpError(404, `未找到餐品编号：${item.productUid}`);
+        throw new HttpError(404, `抱歉，${item.name}已下架，请删除并重新下单`);
       }
     });
     if (
