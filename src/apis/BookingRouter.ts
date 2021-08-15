@@ -266,13 +266,20 @@ export default (router: Router) => {
           }
           if (
             !(booking.tableId && booking.items) &&
-            process.env.DISABLE_FOOD_BALANCE &&
-            !booking.card
+            process.env.DISABLE_FOOD_BALANCE
           ) {
-            throw new HttpError(
-              400,
-              "禁止在本系统创建餐饮订单，请使用银豹系统，订单会在30秒内自动同步至本系统"
-            );
+            if (!booking.card) {
+              throw new HttpError(
+                400,
+                "禁止在本系统创建餐饮订单，请使用银豹系统，订单会在30秒内自动同步至本系统"
+              );
+            } else if (
+              booking.card &&
+              query.useBalance !== "false" &&
+              booking.customer.balance
+            ) {
+              throw new HttpError(400, "禁止使用优惠券同时扣余额");
+            }
           }
         }
 
