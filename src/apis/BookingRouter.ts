@@ -271,7 +271,7 @@ export default (router: Router) => {
           ) {
             throw new HttpError(
               400,
-              "禁止在本系统创建餐饮订单，请使用银豹系统，订单会在10分钟内自动同步至本系统"
+              "禁止在本系统创建餐饮订单，请使用银豹系统，订单会在30秒内自动同步至本系统"
             );
           }
         }
@@ -290,7 +290,10 @@ export default (router: Router) => {
             {
               paymentGateway,
               useBalance: query.useBalance !== "false",
-              balanceAmount: bookingPrice.nonSpecialOfferPrice,
+              balanceAmount:
+                booking.type === Scene.FOOD && booking.tableId
+                  ? bookingPrice.nonSpecialOfferPrice
+                  : undefined,
               atReception:
                 !req.user.can(Permission.BOOKING_ALL_STORE) &&
                 booking.customer.id !== req.user.id
