@@ -243,7 +243,10 @@ export default class Pospal {
         );
         return;
       }
-      if (customer.balance !== user.balance || customer.point !== user.points) {
+      if (
+        customer.balance !== user.balance
+        //  || customer.point !== user.points
+      ) {
         await this.incrementMemberBalancePoints(
           user,
           +(user.balance - customer.balance).toFixed(2),
