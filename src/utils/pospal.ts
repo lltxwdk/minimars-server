@@ -171,7 +171,6 @@ export default class Pospal {
   appId: string;
   appKey: string;
   customers?: Member[];
-  menu?: Menu;
   constructor(private storeCode: string = "") {
     this.appId =
       process.env[
@@ -541,6 +540,17 @@ export default class Pospal {
       ...c,
       products: [] as ProductInCustomerMenu[]
     }));
+    const cids = categories.map(c => c.uid);
+    const isolateProducts = products.filter(
+      p => !cids.includes(p.categoryUid.toString())
+    );
+    if (isolateProducts.length) {
+      console.log(
+        `[DEBUG] ${this.storeCode} isolate products: ${isolateProducts
+          .map(p => `${p.uid}/${p.categoryUid}`)
+          .join(",")}`
+      );
+    }
     menu.forEach(cat => {
       const catProducts = products.filter(
         p => p.categoryUid.toString() === cat.uid
@@ -609,7 +619,6 @@ export default class Pospal {
         return { ...productWithImage, unitName, tags, flavorGroups };
       });
     });
-    this.menu = menu;
     return menu;
   }
 
