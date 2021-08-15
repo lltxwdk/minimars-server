@@ -1,6 +1,6 @@
 import moment from "moment";
-import Booking, { paidBookingStatus } from "../models/Booking";
-import Payment, {
+import BookingModel, { paidBookingStatus } from "../models/Booking";
+import PaymentModel, {
   PaymentGateway,
   flowGateways,
   cardCouponGateways,
@@ -8,6 +8,7 @@ import Payment, {
 } from "../models/Payment";
 import { Store } from "../models/Store";
 import { DocumentType } from "@typegoose/typegoose";
+import CardModel from "../models/Card";
 
 export default async (
   dateInput?: string | Date,
@@ -29,7 +30,7 @@ export default async (
     dateRangeStart = dateEndInput
       ? moment(dateInput).toDate()
       : moment(dateInput).subtract(6, "days").startOf("day").toDate();
-  const bookingsPaidQuery = Booking.find({
+  const bookingsPaidQuery = BookingModel.find({
     date: { $gte: dateStr, $lte: dateEndStr },
     status: { $in: paidBookingStatus }
   }).select(
@@ -40,7 +41,7 @@ export default async (
     bookingsPaidQuery.find({ store });
   }
 
-  const paymentsQuery = Payment.find({
+  const paymentsQuery = PaymentModel.find({
     createdAt: {
       $gte: startOfDay,
       $lte: endOfDay
@@ -50,6 +51,17 @@ export default async (
 
   if (store) {
     paymentsQuery.find({ store });
+  }
+
+  const cardsQuery = CardModel.find({
+    createdAt: {
+      $gte: startOfDay,
+      $lte: endOfDay
+    }
+  });
+
+  if (store) {
+    cardsQuery.find({ stores: store });
   }
 
   bookingsPaidQuery.setOptions({
@@ -65,9 +77,10 @@ export default async (
   });
   paymentsQuery.setOptions({ skipAutoPopulationPaths: ["customer"] });
 
-  const [bookingsPaid, payments] = await Promise.all([
+  const [bookingsPaid, payments, cards] = await Promise.all([
     bookingsPaidQuery.exec(),
-    paymentsQuery.exec()
+    paymentsQuery.exec(),
+    cardsQuery.exec()
   ]);
 
   const flowAmount = payments
@@ -204,6 +217,38 @@ export default async (
       return item;
     });
 
+  const cardsSellCount = cards.reduce((acc, card) => {
+    let item = acc.find(i => i.name === card.title);
+
+    if (!item) {
+      item = {
+        name: card.title,
+        type: card.type,
+        count: 0,
+        isContract: !!card.isContract,
+        amount: 0
+      };
+      if (card.times !== undefined) {
+        item.times = 0;
+      }
+      if (card.balance !== undefined) {
+        item.balance = 0;
+      }
+
+      acc.push(item);
+    }
+
+    item.count++;
+    item.amount = +(item.amount + card.price).toFixed(10);
+    if (item.times !== undefined && card.times !== undefined) {
+      item.times += card.times;
+    }
+    if (item.balance !== undefined && card.balance !== undefined) {
+      item.balance = +(item.balance + card.balance).toFixed(10);
+    }
+    return acc;
+  }, [] as { name: string; type: string; count: number; isContract: boolean; times?: number; balance?: number; amount: number }[]);
+
   const cardsCount = bookingsPaid
     .filter(b => b.type === Scene.PLAY)
     .filter(b => b.card)
@@ -253,7 +298,7 @@ export default async (
     .reduce((acc, p) => acc + (p.amountDeposit || p.amount), 0);
   // console.log("[DEBUG] Groups calculated:", Date.now() - starts);
 
-  const dailyCustomers = await Booking.aggregate([
+  const dailyCustomers = await BookingModel.aggregate([
     { $match: { date: { $gte: dateRangeStartStr, $lte: dateEndStr } } },
     {
       $project: {
@@ -311,7 +356,7 @@ export default async (
     }
   ]);
 
-  const dailyFlowAmount = await Payment.aggregate([
+  const dailyFlowAmount = await PaymentModel.aggregate([
     {
       $match: {
         createdAt: { $gte: dateRangeStart, $lte: endOfDay },
@@ -366,7 +411,7 @@ export default async (
     }
   ]);
 
-  const dailyCardCouponPayment = await Payment.aggregate([
+  const dailyCardCouponPayment = await PaymentModel.aggregate([
     {
       $match: {
         createdAt: { $gte: dateRangeStart, $lte: endOfDay },
@@ -433,6 +478,7 @@ export default async (
     flowAmountByScenes,
     flowAmountByStores,
     couponsCount,
+    cardsSellCount,
     cardsCount,
     balanceCount,
     customersByType,
