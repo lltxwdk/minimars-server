@@ -872,7 +872,9 @@ export class Booking extends TimeStamps {
           scene: p.scene,
           customer: p.customer,
           store: this.store,
-          amount: -p.amount,
+          amount: p.gatewayData?.refundAmount
+            ? -p.gatewayData.refundAmount
+            : -p.amount,
           title: `退款：${p.title}`,
           booking: p.booking,
           gateway: p.gateway,
