@@ -136,7 +136,7 @@ export class Store {
   foodMenu?: Menu;
 
   get customerFoodMenu() {
-    if (!this.foodMenu) return [];
+    if (!this.foodMenu) return undefined;
     this.foodMenu.forEach(cat => {
       cat.products.forEach(product => {
         if (
