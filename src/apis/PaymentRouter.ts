@@ -296,7 +296,7 @@ export default (router: Router) => {
         query.find({ scene: { $in: queryParams.scene.split(",") as Scene[] } });
       }
 
-      const payments = await query.find().limit(5e3).exec();
+      const payments = await query.find().limit(2e4).exec();
 
       /* original data */
       const filename = "支付明细.xlsx";
