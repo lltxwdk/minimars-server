@@ -250,7 +250,6 @@ export default async (
   }, [] as { name: string; type: string; count: number; isContract: boolean; times?: number; balance?: number; amount: number }[]);
 
   const cardsCount = bookingsPaid
-    .filter(b => b.type === Scene.PLAY)
     .filter(b => b.card)
     .reduce((acc, booking) => {
       const card = booking.card;
@@ -261,6 +260,7 @@ export default async (
       if (!item) {
         item = {
           name: card.title,
+          count: 0,
           isContract: card.isContract || false,
           adultsCount: 0,
           kidsCount: 0,
@@ -270,11 +270,11 @@ export default async (
       }
 
       item.adultsCount += booking.adultsCount || 0;
-      item.kidsCount += booking.kidsCount || 0;
+      item.kidsCount += booking.kidsCount || 1;
       item.amount +=
         (booking.amountPaidInCard || 0) + (booking.amountPaidInDeposit || 0);
       return acc;
-    }, [] as { name: string; isContract: boolean; adultsCount: number; kidsCount: number; amount: number }[]);
+    }, [] as { name: string; count: number; isContract: boolean; adultsCount: number; kidsCount: number; amount: number }[]);
 
   const balanceCount = bookingsPaid
     .filter(b => b.type === Scene.PLAY)
