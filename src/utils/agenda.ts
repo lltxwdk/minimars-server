@@ -742,7 +742,7 @@ export const initAgenda = async () => {
           const menu = await pospal.getMenu();
           store.foodMenu = menu;
           await store.save();
-          storeMap[store.code] = store;
+          storeMap[store.id] = store;
           console.log(`[CRO] Store ${store.code} menu updated.`);
         } catch (err) {
           console.error(`[CRO] ${err.message}`);
