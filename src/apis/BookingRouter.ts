@@ -635,7 +635,7 @@ export default (router: Router) => {
 
           // 4-payment plan
           await PaymentModel.updateMany(
-            { booking },
+            { booking: booking.id },
             { $set: { refunded: true } }
           );
 
@@ -646,8 +646,8 @@ export default (router: Router) => {
             store: booking.store,
             amount: -(booking.amountPaid || 0),
             title: `升级使用${card.title}支付`,
-            booking,
-            card,
+            booking: booking.id,
+            card: card.id,
             gateway: cardPayment.gateway
           });
           await amendPayment.save();
@@ -658,8 +658,8 @@ export default (router: Router) => {
             store: booking.store,
             amount: (booking.kidsCount / card.times) * card.price,
             title: `升级使用${card.title}支付`,
-            booking,
-            card,
+            booking: booking.id,
+            card: card.id,
             times: -booking.kidsCount,
             gateway: card.isContract
               ? PaymentGateway.Contract
