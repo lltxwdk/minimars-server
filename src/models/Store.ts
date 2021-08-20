@@ -166,7 +166,8 @@ export class Store {
             stock: p.stock,
             unitName: p.unitName,
             flavorGroups: p.flavorGroups,
-            isSpecialOffer: p.isSpecialOffer
+            isSpecialOffer: p.isSpecialOffer,
+            tags: p.tags
           }));
         return cat.products.length;
       })
