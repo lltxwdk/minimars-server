@@ -47,6 +47,7 @@ export default async function (
       "post(/.*)?",
       "wechat.*",
       "wework.*",
+      "byte.*",
       "youzan.*",
       "qrcode-image.*"
     ].some(pattern => {

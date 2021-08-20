@@ -28,12 +28,14 @@ import YouzanRouter from "./YouzanRouter";
 import { Permission } from "../models/Role";
 import RoleRouter from "./RoleRouter";
 import WeworkRouter from "./WeworkRouter";
+import ByteRouter from "./ByteRouter";
 
 export default (app: Express, router: Router) => {
   // register routes
   [
     AuthRouter,
     BookingRouter,
+    ByteRouter,
     CardRouter,
     CardTypeRouter,
     CouponRouter,
