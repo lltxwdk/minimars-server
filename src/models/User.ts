@@ -132,6 +132,12 @@ export class User {
   unionid?: string;
 
   @prop()
+  openidByte?: string;
+
+  @prop()
+  unionidByte?: string;
+
+  @prop()
   pospalId?: string;
 
   @prop()
