@@ -133,16 +133,17 @@ export default async (
         }
         acc[key].adultsCount += booking.adultsCount || 0;
         acc[key].kidsCount += booking.kidsCount || 0;
+        acc[key].count++;
 
         return acc;
       },
       {
-        card: { adultsCount: 0, kidsCount: 0 },
-        coupon: { adultsCount: 0, kidsCount: 0 },
-        guest: { adultsCount: 0, kidsCount: 0 },
-        balance: { adultsCount: 0, kidsCount: 0 },
-        contract: { adultsCount: 0, kidsCount: 0 },
-        other: { adultsCount: 0, kidsCount: 0 }
+        card: { adultsCount: 0, kidsCount: 0, count: 0 },
+        coupon: { adultsCount: 0, kidsCount: 0, count: 0 },
+        guest: { adultsCount: 0, kidsCount: 0, count: 0 },
+        balance: { adultsCount: 0, kidsCount: 0, count: 0 },
+        contract: { adultsCount: 0, kidsCount: 0, count: 0 },
+        other: { adultsCount: 0, kidsCount: 0, count: 0 }
       }
     );
 
