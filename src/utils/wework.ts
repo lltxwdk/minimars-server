@@ -101,7 +101,10 @@ export async function handleCancelBooking(
   if (!booking) {
     throw new Error(`查询不到订单“${bookingId}”`);
   }
-  if (booking.customer?.mobile !== mobile) {
+  if (booking.customer?.mobile && booking.customer?.mobile !== mobile) {
+    console.error(
+      `[WCO] Approval ${approval.sp_no}: booking ${booking.id} mobile is ${booking.customer?.mobile} but submit ${mobile}.`
+    );
     throw new Error(`客人手机号${mobile || ""}校验失败，订单和手机号不匹配`);
   }
   if (
