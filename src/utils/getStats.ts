@@ -35,7 +35,7 @@ export default async (
     date: { $gte: dateStr, $lte: dateEndStr },
     status: { $in: paidBookingStatus }
   }).select(
-    "type kidsCount adultsCount amountPaid amountPaidInBalance amountPaidInCard card coupon"
+    "type kidsCount adultsCount amountPaid amountPaidInBalance amountPaidInCard card coupon tableId"
   );
 
   if (store) {
@@ -81,6 +81,7 @@ export default async (
     ]
   });
   paymentsQuery.setOptions({ skipAutoPopulationPaths: ["customer"] });
+  cardsQuery.setOptions({ skipAutoPopulationPaths: ["payments"] });
 
   const [bookingsPaid, payments, cards] = await Promise.all([
     bookingsPaidQuery.exec(),
@@ -154,6 +155,9 @@ export default async (
 
   const bookingsCountByType = bookingsPaid.reduce((map, booking) => {
     if (!map[booking.type]) map[booking.type] = 0;
+    if (booking.type === Scene.FOOD) {
+      if (booking.card && !booking.tableId) return map;
+    }
     map[booking.type]++;
     return map;
   }, {} as Record<Scene, number>);
