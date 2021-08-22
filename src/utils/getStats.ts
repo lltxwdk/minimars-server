@@ -14,7 +14,8 @@ export default async (
   dateInput?: string | Date,
   dateEndInput?: string | Date,
   store?: DocumentType<Store>,
-  popBookingCardCoupon = false
+  popBookingCardCoupon = false,
+  scenes?: Scene[]
 ) => {
   // const starts: number = Date.now();
   // console.log("[DEBUG] Stats starts:", starts);
@@ -51,6 +52,10 @@ export default async (
 
   if (store) {
     paymentsQuery.find({ store });
+  }
+
+  if (scenes) {
+    paymentsQuery.find({ scene: { $in: scenes } });
   }
 
   const cardsQuery = CardModel.find({

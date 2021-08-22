@@ -134,7 +134,8 @@ export default (router: Router) => {
         dateInput,
         dateInputEnd,
         req.query.store || req.user.store,
-        !!req.query.popBookingCardCoupon
+        !!req.query.popBookingCardCoupon,
+        req.query.scene && req.query.scene.split(",")
       );
       res.json(stats);
     })
