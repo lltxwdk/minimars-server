@@ -120,6 +120,12 @@ export class CardType {
   isContract: boolean = true;
 
   @prop({ type: Boolean, default: false })
+  isLimited: boolean = false;
+
+  @prop({ type: Boolean, default: false })
+  isCombo: boolean = false;
+
+  @prop({ type: Boolean, default: false })
   openForClient: boolean = false;
 
   @prop({ type: Boolean, default: false })

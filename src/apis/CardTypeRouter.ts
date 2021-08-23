@@ -73,6 +73,9 @@ export default (router: Router) => {
             "openForClient",
             "openForReception",
             "isContract",
+            "isLimited",
+            "isCombo",
+            "isGift",
             "type",
             "stores"
           ] as Array<keyof CardTypeQuery>
