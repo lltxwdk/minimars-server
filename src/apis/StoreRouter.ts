@@ -68,7 +68,11 @@ export default (router: Router) => {
     .all(
       handleAsyncErrors(
         async (req: Request, res: Response, next: NextFunction) => {
-          const store = await StoreModel.findById(req.params.storeId);
+          const query = StoreModel.findById(req.params.storeId);
+          if (req.query.withFoodMenu) {
+            query.select("foodMenu");
+          }
+          const store = await query.exec();
           if (!store) {
             throw new HttpError(404, `Store not found: ${req.params.storeId}`);
           }
