@@ -108,7 +108,7 @@ class FoodItem {
   {
     path: "customer",
     select:
-      "name avatarUrl mobile tags points balanceDeposit balanceReward openidMp"
+      "name avatarUrl mobile tags points balanceDeposit balanceReward openidMp youzanId"
   },
   {
     path: "store",
