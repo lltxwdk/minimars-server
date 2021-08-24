@@ -273,12 +273,6 @@ export default (router: Router) => {
                 400,
                 "禁止在本系统创建餐饮订单，请使用银豹系统，订单会在30秒内自动同步至本系统"
               );
-            } else if (
-              booking.card &&
-              query.useBalance !== "false" &&
-              booking.customer.balance
-            ) {
-              throw new HttpError(400, "禁止使用优惠券同时扣余额");
             }
           }
         }
@@ -290,6 +284,15 @@ export default (router: Router) => {
 
         try {
           const bookingPrice = await booking.calculatePrice();
+          if (
+            bookingPrice.price &&
+            booking.type === Scene.FOOD &&
+            booking.card &&
+            query.useBalance !== "false" &&
+            booking.customer.balance
+          ) {
+            throw new HttpError(400, "禁止使用优惠券同时扣余额");
+          }
           const paymentGateway =
             query.paymentGateway ||
             (req.ua.isWechat ? PaymentGateway.WechatPay : undefined);
