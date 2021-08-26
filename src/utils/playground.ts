@@ -83,7 +83,7 @@ export default async function playground() {
     // }
     // const approval = await getApprovalDetail("202107170041");
     // console.log(JSON.stringify(approval));
-    // saveCardTypeQr("gzr-888", "TS");
+    // saveCardTypeQr("zq-100", "6125f438bd1dcc558745fb1d");
     // saveCardTypeQr("gzr-688", "TS");
     // saveCardTypeQr("gzr-888", "JN");
     // saveCardTypeQr("gzr-688", "JN");
@@ -114,10 +114,16 @@ async function saveTableQr(s: string, a: string, t: string) {
   await getQrcode(code, path);
 }
 
-async function saveCardTypeQr(slug: string, storeCode?: string) {
-  const card = await CardTypeModel.findOne({ slug });
-  if (!card) throw new Error("card_type_not_found");
-  let code = `/pages/index/index?cardSell=${card.id}`;
+async function saveCardTypeQr(slug: string, id?: string, storeCode?: string) {
+  let cardId = "";
+  if (id) {
+    cardId = id;
+  } else {
+    const card = await CardTypeModel.findOne({ slug });
+    if (!card) throw new Error("card_type_not_found");
+    cardId = card.id;
+  }
+  let code = `/pages/index/index?cardSell=${cardId}`;
   let filename = slug;
 
   if (storeCode) {
