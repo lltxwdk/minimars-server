@@ -140,16 +140,19 @@ export default async (
         acc[key].adultsCount += booking.adultsCount || 0;
         acc[key].kidsCount += booking.kidsCount || 0;
         acc[key].count++;
+        acc[key].amountPaid = +(
+          acc[key].amountPaid + (booking.amountPaid || 0)
+        ).toFixed(10);
 
         return acc;
       },
       {
-        card: { adultsCount: 0, kidsCount: 0, count: 0 },
-        coupon: { adultsCount: 0, kidsCount: 0, count: 0 },
-        guest: { adultsCount: 0, kidsCount: 0, count: 0 },
-        balance: { adultsCount: 0, kidsCount: 0, count: 0 },
-        contract: { adultsCount: 0, kidsCount: 0, count: 0 },
-        other: { adultsCount: 0, kidsCount: 0, count: 0 }
+        card: { adultsCount: 0, kidsCount: 0, count: 0, amountPaid: 0 },
+        coupon: { adultsCount: 0, kidsCount: 0, count: 0, amountPaid: 0 },
+        guest: { adultsCount: 0, kidsCount: 0, count: 0, amountPaid: 0 },
+        balance: { adultsCount: 0, kidsCount: 0, count: 0, amountPaid: 0 },
+        contract: { adultsCount: 0, kidsCount: 0, count: 0, amountPaid: 0 },
+        other: { adultsCount: 0, kidsCount: 0, count: 0, amountPaid: 0 }
       }
     );
 
@@ -172,7 +175,7 @@ export default async (
       return acc;
     }, {} as Record<PaymentGateway, number>);
 
-  const flowAmountByScenes: { [gateway: string]: number } = payments
+  const flowAmountByScenes: { [scene: string]: number } = payments
     .filter(p => flowGateways.includes(p.gateway))
     .reduce((acc, payment) => {
       if (!acc[payment.scene]) {
@@ -258,6 +261,9 @@ export default async (
     }
     return acc;
   }, [] as { name: string; type: string; count: number; isContract: boolean; times?: number; balance?: number; amount: number }[]);
+
+  const cardsSellRenewTimesCount = cards.filter(c => c.isRenewTimes).length;
+  const cardsSellFirstCount = cards.filter(c => c.isFirst).length;
 
   const cardsCount = bookingsPaid
     .filter(b => b.card)
@@ -489,6 +495,8 @@ export default async (
     flowAmountByStores,
     couponsCount,
     cardsSellCount,
+    cardsSellFirstCount,
+    cardsSellRenewTimesCount,
     cardsCount,
     balanceCount,
     customersByType,

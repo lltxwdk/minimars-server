@@ -4,7 +4,11 @@ import moment from "moment";
 import getStats from "../utils/getStats";
 import UserModel from "../models/User";
 import CardModel, { CardStatus } from "../models/Card";
-import { storeMap } from "../models/Store";
+import StoreModel, { Store, storeMap } from "../models/Store";
+// @ts-ignore
+import xlsxPopulate from "xlsx-populate";
+import xlsxTemplate from "xlsx-template";
+import { unlinkSync, readFileSync, writeFileSync } from "fs";
 
 moment.locale("zh-cn");
 
@@ -138,6 +142,103 @@ export default (router: Router) => {
         req.query.scene && req.query.scene.split(",")
       );
       res.json(stats);
+    })
+  );
+
+  router.route("/daily-report/:date").get(
+    handleAsyncErrors(async (req: Request, res: Response) => {
+      const date = req.params.date;
+      // const workbook = await xlsxPopulate.fromFileAsync(
+      //   "./reports/templates/daily.xlsx"
+      // );
+      const template = new xlsxTemplate(
+        readFileSync("./reports/templates/daily.xlsx")
+      );
+
+      const filename = `运营部日报 ${date}.xlsx`;
+      const path = `./reports/${filename}`;
+
+      try {
+        unlinkSync(path); // delete file if exists before generating a new report
+      } catch (e) {
+        // keep silent when file does not exist
+      }
+
+      // workbook.find("{{date}}", date);
+
+      const stores = await StoreModel.find().where({
+        code: {
+          $in: ["TS", "JN", "BY", "HX", "DY"]
+        }
+      });
+      const values: Record<string, any> = { date };
+      await Promise.all(
+        stores.map(async store => {
+          const stats = await getStats(date, date, store);
+          const timesCardSellAmount = stats.cardsSellCount
+            .filter(item => item.type === "times" && !item.isContract)
+            .reduce((sum, item) => +(sum + item.amount).toFixed(2), 0);
+          const periodCardSellAmount = stats.cardsSellCount
+            .filter(item => item.type === "period" && !item.isContract)
+            .reduce((sum, item) => +(sum + item.amount).toFixed(2), 0);
+          const balanceSellAmount = stats.flowAmountByScenes.balance;
+          const totalCardSellAmount = stats.cardsSellCount.reduce(
+            (sum, item) => +(sum + item.amount).toFixed(2),
+            0
+          );
+          const otherCardSellAmount = +(
+            totalCardSellAmount -
+            timesCardSellAmount -
+            periodCardSellAmount
+          ).toFixed(2);
+
+          const storeValues = {
+            playBookings: stats.bookingsCountByType.play,
+            customerCount: stats.customerCount,
+            timesCardSellAmount,
+            periodCardSellAmount,
+            balanceSellAmount,
+            otherCardSellAmount,
+            guestPlayAmount: +(
+              stats.customersByType.guest.amountPaid +
+              stats.customersByType.coupon.amountPaid
+            ).toFixed(2),
+            playAmount: +stats.playAmount.toFixed(2),
+            foodAmount: +stats.foodAmount.toFixed(2),
+            eventAmount: stats.flowAmountByScenes.event,
+            partyAmount: +(stats.flowAmountByScenes.party || 0).toFixed(2),
+            guestPlayBookingsCount:
+              stats.customersByType.guest.count +
+              stats.customersByType.coupon.count,
+            cardsCount: stats.cardsSellCount.reduce(
+              (count, item) => count + item.count,
+              0
+            ),
+            firstCardsCount: stats.cardsSellFirstCount,
+            renewCardsCount: stats.cardsSellRenewTimesCount,
+            foodBookingsCount: stats.bookingsCountByType.food,
+            foodBookingAvgAmount: +(
+              stats.foodAmount / stats.bookingsCountByType.food
+            ).toFixed(2),
+            eventBookingsCount: stats.bookingsCountByType.event
+          } as Record<string, any>;
+
+          // for (const field in values) {
+          //   workbook.find(`{{${store.code}.${field}}}`, values[field]);
+          // }
+          for (const field in storeValues) {
+            values[`${store.code}_${field}`] = storeValues[field];
+          }
+        })
+      );
+      // template.substitute(1, values);
+      template.substitute(1, values);
+
+      // await workbook.toFileAsync(path);
+      const data = template.generate({ type: "nodebuffer" }) as Buffer;
+      writeFileSync(path, data);
+
+      res.download(path, filename);
     })
   );
 

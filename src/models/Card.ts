@@ -121,6 +121,9 @@ export class Card {
   @prop({ type: Boolean })
   isRenewTimes?: boolean;
 
+  @prop({ type: Boolean })
+  isFirst?: boolean;
+
   @prop({
     ref: "Payment",
     foreignField: "card",
