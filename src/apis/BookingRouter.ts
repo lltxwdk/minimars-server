@@ -439,6 +439,30 @@ export default (router: Router) => {
         }
 
         let total = await query.countDocuments();
+        const [
+          { adultsCount, kidsCount, amountPaid } = {
+            adultsCount: 0,
+            kidsCount: 0,
+            amountPaid: 0
+          }
+        ] = await BookingModel.aggregate([
+          //@ts-ignore
+          { $match: query._conditions },
+          {
+            $group: {
+              _id: null,
+              adultsCount: {
+                $sum: "$adultsCount"
+              },
+              kidsCount: {
+                $sum: "$kidsCount"
+              },
+              amountPaid: {
+                $sum: "$amountPaid"
+              }
+            }
+          }
+        ]);
 
         const page = await query
           .find()
@@ -450,6 +474,13 @@ export default (router: Router) => {
         if (skip + page.length > total) {
           total = skip + page.length;
         }
+
+        res.set(
+          "total-amount",
+          [adultsCount, kidsCount, amountPaid]
+            .map((n, i) => (i === 2 ? n.toFixed(2) : n.toFixed()))
+            .join(",")
+        );
 
         res.paginatify(limit, skip, total).json(page);
       })
