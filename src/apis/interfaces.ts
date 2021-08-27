@@ -125,6 +125,7 @@ export interface PaymentPutBody extends Partial<Payment> {}
 export interface PaymentQuery extends ListQuery {
   date?: string;
   dateEnd?: string;
+  dateType?: string;
   paid?: "false";
   refunded?: "true";
   customer?: string;

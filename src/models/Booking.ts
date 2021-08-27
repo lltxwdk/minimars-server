@@ -1056,6 +1056,13 @@ export class Booking extends TimeStamps {
       }
     }
 
+    await Promise.all(
+      this.payments.map(async p => {
+        p.appliedAt = new Date();
+        await p.save();
+      })
+    );
+
     if (
       this.type === Scene.PLAY &&
       customer &&

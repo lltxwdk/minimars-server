@@ -53,7 +53,11 @@ export default (router: Router) => {
           const end = moment(queryParams.dateEnd || queryParams.date)
             .endOf("day")
             .toDate();
-          query.find({ createdAt: { $gte: start, $lte: end } });
+          if (queryParams.dateType === "applied") {
+            query.find({ appliedAt: { $gte: start, $lte: end } });
+          } else {
+            query.find({ createdAt: { $gte: start, $lte: end } });
+          }
         }
 
         if (queryParams.paid) {

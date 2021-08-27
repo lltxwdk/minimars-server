@@ -298,6 +298,9 @@ export class Payment {
   @prop()
   original?: string;
 
+  @prop({ type: Date })
+  appliedAt?: Date;
+
   get valid() {
     const payment = this as unknown as DocumentType<Payment>;
     return (
