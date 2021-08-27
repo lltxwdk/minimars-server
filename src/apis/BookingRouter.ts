@@ -388,7 +388,11 @@ export default (router: Router) => {
         if (queryParams.paymentType) {
           switch (queryParams.paymentType) {
             case "guest":
-              query.where({ coupon: null, card: null });
+              query.where({
+                coupon: null,
+                card: null,
+                amountPaidInBalance: null
+              });
               break;
             case "coupon":
               query.where({ coupon: { $ne: null } });
