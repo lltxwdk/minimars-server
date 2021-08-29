@@ -1,5 +1,8 @@
 import moment from "moment";
-import BookingModel, { paidBookingStatus } from "../models/Booking";
+import BookingModel, {
+  BookingStatus,
+  paidBookingStatus
+} from "../models/Booking";
 import PaymentModel, {
   PaymentGateway,
   flowGateways,
@@ -31,15 +34,21 @@ export default async (
     dateRangeStart = dateEndInput
       ? moment(dateInput).toDate()
       : moment(dateInput).subtract(6, "days").startOf("day").toDate();
-  const bookingsPaidQuery = BookingModel.find({
+  const bookingsQuery = BookingModel.find({
     date: { $gte: dateStr, $lte: dateEndStr },
-    status: { $in: paidBookingStatus }
+    status: {
+      $in: [
+        BookingStatus.IN_SERVICE,
+        BookingStatus.FINISHED,
+        BookingStatus.PENDING_REFUND
+      ]
+    }
   }).select(
     "type kidsCount adultsCount amountPaid amountPaidInBalance amountPaidInCard card coupon tableId"
   );
 
   if (store) {
-    bookingsPaidQuery.find({ store });
+    bookingsQuery.find({ store });
   }
 
   const paymentsQuery = PaymentModel.find({
@@ -69,7 +78,7 @@ export default async (
     cardsQuery.find({ stores: store });
   }
 
-  bookingsPaidQuery.setOptions({
+  bookingsQuery.setOptions({
     skipAutoPopulationPaths: [
       "customer",
       "store",
@@ -83,8 +92,8 @@ export default async (
   paymentsQuery.setOptions({ skipAutoPopulationPaths: ["customer"] });
   cardsQuery.setOptions({ skipAutoPopulationPaths: ["payments"] });
 
-  const [bookingsPaid, payments, cards] = await Promise.all([
-    bookingsPaidQuery.exec(),
+  const [bookings, payments, cards] = await Promise.all([
+    bookingsQuery.exec(),
     paymentsQuery.exec(),
     cardsQuery.exec()
   ]);
@@ -109,7 +118,7 @@ export default async (
     .filter(p => p.scene === Scene.MALL)
     .reduce((amount, p) => amount + (p.amountDeposit || p.amount), 0);
 
-  const customerCount = bookingsPaid
+  const customerCount = bookings
     .filter(b => b.type === Scene.PLAY)
     .reduce(
       (count, booking) =>
@@ -117,7 +126,7 @@ export default async (
       0
     );
 
-  const customersByType = bookingsPaid
+  const customersByType = bookings
     .filter(b => b.type === Scene.PLAY)
     .reduce(
       (acc, booking) => {
@@ -156,7 +165,7 @@ export default async (
       }
     );
 
-  const bookingsCountByType = bookingsPaid.reduce((map, booking) => {
+  const bookingsCountByType = bookings.reduce((map, booking) => {
     if (!map[booking.type]) map[booking.type] = 0;
     if (booking.type === Scene.FOOD) {
       if (booking.card && !booking.tableId) return map;
@@ -197,7 +206,7 @@ export default async (
       return acc;
     }, {} as Record<string, number>);
 
-  const couponsCount = bookingsPaid
+  const couponsCount = bookings
     .filter(b => b.type === Scene.PLAY)
     .filter(b => b.coupon)
     .reduce((acc, booking) => {
@@ -265,7 +274,7 @@ export default async (
   const cardsSellRenewTimesCount = cards.filter(c => c.isRenewTimes).length;
   const cardsSellFirstTimesCount = cards.filter(c => c.isFirstTimes).length;
 
-  const cardsCount = bookingsPaid
+  const cardsCount = bookings
     .filter(b => b.card)
     .reduce((acc, booking) => {
       const card = booking.card;
@@ -292,7 +301,7 @@ export default async (
       return acc;
     }, [] as { name: string; count: number; isContract: boolean; adultsCount: number; kidsCount: number; amount: number }[]);
 
-  const balanceCount = bookingsPaid
+  const balanceCount = bookings
     .filter(b => b.type === Scene.PLAY)
     .filter(b => b.amountPaidInBalance)
     .reduce(

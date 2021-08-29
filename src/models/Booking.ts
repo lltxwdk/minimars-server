@@ -24,8 +24,6 @@ import HttpError from "../utils/HttpError";
 import Pospal, { ProductInCustomerMenu } from "../utils/pospal";
 import { TimeStamps } from "@typegoose/typegoose/lib/defaultClasses";
 
-const { DEBUG } = process.env;
-
 export enum BookingStatus {
   PENDING = "pending",
   BOOKED = "booked",
