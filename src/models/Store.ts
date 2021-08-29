@@ -332,7 +332,8 @@ export class Store {
               booking: booking.id,
               gateway: this.pospalPaymentMethodMap?.[p.code],
               gatewayData: { provider: "pospal" },
-              createdAt: new Date(ticket.datetime)
+              createdAt: new Date(ticket.datetime),
+              appliedAt: new Date(ticket.datetime)
             });
             return payment;
           })

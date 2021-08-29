@@ -707,8 +707,12 @@ export class Booking extends TimeStamps {
           throw new HttpError(400, "点餐下单发生错误，资金已原路退回");
         }
       }
+      await this.checkIn();
     } else if ([Scene.GIFT, Scene.EVENT].includes(this.type)) {
-      this.status = atReception ? BookingStatus.FINISHED : BookingStatus.BOOKED;
+      this.status = atReception
+        ? BookingStatus.FINISHED
+        : BookingStatus.IN_SERVICE;
+      await this.checkIn();
     } else if (this.date === moment().format("YYYY-MM-DD") && atReception) {
       await this.checkIn();
     } else {
