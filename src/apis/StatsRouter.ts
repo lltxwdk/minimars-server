@@ -214,7 +214,8 @@ export default (router: Router) => {
               stats.customersByType.guest.count +
               stats.customersByType.coupon.count,
             cardsCount: stats.cardsSellCount.reduce(
-              (count, item) => count + item.count,
+              (count, item) =>
+                count + item.type === "coupon" ? 0 : item.count,
               0
             ),
             firstCardsCount: stats.cardsSellFirstTimesCount,
