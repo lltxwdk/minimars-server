@@ -147,10 +147,14 @@ export default (router: Router) => {
     handleAsyncErrors(async (req: Request, res: Response) => {
       const date = req.params.date;
       const template = new xlsxTemplate(
-        readFileSync("./reports/templates/daily.xlsx")
+        readFileSync(
+          `./reports/templates/${req.user.store ? "daily-store" : "daily"}.xlsx`
+        )
       );
 
-      const filename = `运营部日报 ${date}.xlsx`;
+      const filename = `${
+        req.user.store ? req.user.store.name : "运营部"
+      }日报 ${date}.xlsx`;
       const path = `./reports/${filename}`;
 
       try {
@@ -161,10 +165,15 @@ export default (router: Router) => {
 
       const stores = await StoreModel.find().where({
         code: {
-          $in: ["TS", "JN", "BY", "HX", "DY"]
+          $in: req.user.store
+            ? [req.user.store.code]
+            : ["TS", "JN", "BY", "HX", "DY"]
         }
       });
       const values: Record<string, any> = { date };
+      if (req.user.store) {
+        values.store = req.user.store.name;
+      }
       await Promise.all(
         stores.map(async store => {
           const stats = await getStats(date, date, store);
@@ -218,10 +227,15 @@ export default (router: Router) => {
           } as Record<string, any>;
 
           for (const field in storeValues) {
-            values[`${store.code}_${field}`] = storeValues[field];
+            if (req.user.store) {
+              values[field] = storeValues[field];
+            } else {
+              values[`${store.code}_${field}`] = storeValues[field];
+            }
           }
         })
       );
+
       template.substitute(1, values);
 
       const data = template.generate({ type: "nodebuffer" }) as Buffer;
