@@ -183,7 +183,7 @@ export default (router: Router) => {
           const periodCardSellAmount = stats.cardsSellCount
             .filter(item => item.type === "period" && !item.isContract)
             .reduce((sum, item) => +(sum + item.amount).toFixed(2), 0);
-          const balanceSellAmount = stats.flowAmountByScenes.balance;
+          const balanceSellAmount = stats.assetsByScenes.balance;
           const totalCardSellAmount = stats.cardsSellCount.reduce(
             (sum, item) => +(sum + item.amount).toFixed(2),
             0
@@ -196,7 +196,7 @@ export default (router: Router) => {
 
           const storeValues = {
             playBookings: stats.bookingsCountByType.play,
-            customerCount: stats.customerCount,
+            customerCount: stats.customers,
             timesCardSellAmount,
             periodCardSellAmount,
             balanceSellAmount,
@@ -204,11 +204,11 @@ export default (router: Router) => {
             guestPlayAmount: +stats.customersByType.guest.amountPaid.toFixed(2),
             couponPlayAmount:
               +stats.customersByType.coupon.amountPaid.toFixed(2),
-            playAmount: +stats.playAmount.toFixed(2),
-            foodAmount: +stats.foodAmount.toFixed(2),
-            foodSalesAmount: +stats.foodSalesAmount.toFixed(2),
-            eventSalesAmount: +stats.eventSalesAmount.toFixed(2),
-            partyAmount: +(stats.flowAmountByScenes.party || 0).toFixed(2),
+            playAmount: +stats.revenueByScenes.play.toFixed(2),
+            foodAmount: +stats.revenueByScenes.food.toFixed(2),
+            foodSalesAmount: +stats.amountByScenes.food.toFixed(2),
+            eventSalesAmount: +stats.amountByScenes.event.toFixed(2),
+            partyAmount: +(stats.revenueByScenes.party || 0).toFixed(2),
             guestPlayBookingsCount: stats.customersByType.guest.count,
             couponPlayBookingsCount: stats.customersByType.coupon.count,
             cardsCount: stats.cardsSellCount.reduce(
@@ -220,7 +220,7 @@ export default (router: Router) => {
             renewCardsCount: stats.cardsSellRenewTimesCount,
             foodBookingsCount: stats.bookingsCountByType.food,
             foodBookingAvgAmount: +(
-              stats.foodAmount / stats.bookingsCountByType.food
+              stats.revenueByScenes.food / stats.bookingsCountByType.food
             ).toFixed(2),
             eventBookingsCount: stats.bookingsCountByType.event
           } as Record<string, any>;

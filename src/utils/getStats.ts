@@ -1,8 +1,5 @@
 import moment from "moment";
-import BookingModel, {
-  BookingStatus,
-  paidBookingStatus
-} from "../models/Booking";
+import BookingModel, { BookingStatus } from "../models/Booking";
 import PaymentModel, {
   PaymentGateway,
   flowGateways,
@@ -57,7 +54,7 @@ export default async (
       $lte: endOfDay
     },
     paid: true
-  }).select("amount amountDeposit scene store gateway");
+  }).select("amount amountDeposit assets debt revenue scene store gateway");
 
   if (store) {
     paymentsQuery.find({ store });
@@ -98,80 +95,68 @@ export default async (
     cardsQuery.exec()
   ]);
 
-  const flowAmount = payments
-    .filter(p => flowGateways.includes(p.gateway))
-    .reduce((amount, p) => amount + p.amount, 0);
+  const customerTypes = [
+    "card",
+    "balance",
+    "coupon",
+    "guest",
+    "contract",
+    "other"
+  ] as const;
+  type CustomerType = typeof customerTypes[number];
 
-  const cardCouponAmount = payments
-    .filter(p => cardCouponGateways.includes(p.gateway))
-    .reduce((amount, p) => amount + (p.amountDeposit || p.amount), 0);
+  const customersByType = customerTypes.reduce((map, type) => {
+    map[type as CustomerType] = {
+      adultsCount: 0,
+      kidsCount: 0,
+      count: 0,
+      amountPaid: 0
+    };
+    return map;
+  }, {} as Record<CustomerType, { adultsCount: number; kidsCount: number; count: number; amountPaid: number }>);
 
-  const playAmount = payments
-    .filter(p => p.scene === Scene.PLAY)
-    .reduce((amount, p) => amount + (p.amountDeposit || p.amount), 0);
-
-  const foodAmount = payments
-    .filter(p => p.scene === Scene.FOOD)
-    .reduce((amount, p) => amount + (p.amountDeposit || p.amount), 0);
-
-  const foodSalesAmount = payments
-    .filter(p => p.scene === Scene.FOOD)
-    .reduce((amount, p) => amount + p.amount, 0);
-
-  const eventSalesAmount = payments
-    .filter(p => p.scene === Scene.EVENT)
-    .reduce((amount, p) => amount + p.amount, 0);
-
-  const mallAmount = payments
-    .filter(p => p.scene === Scene.MALL)
-    .reduce((amount, p) => amount + (p.amountDeposit || p.amount), 0);
-
-  const customerCount = bookings
+  bookings
     .filter(b => b.type === Scene.PLAY)
-    .reduce(
-      (count, booking) =>
-        count + (booking.adultsCount || 0) + (booking.kidsCount || 0),
-      0
-    );
-
-  const customersByType = bookings
-    .filter(b => b.type === Scene.PLAY)
-    .reduce(
-      (acc, booking) => {
-        let key: "card" | "balance" | "coupon" | "guest" | "contract" | "other";
-        if (booking.coupon) {
-          key = "coupon";
-        } else if (booking.amountPaidInBalance) {
-          key = "balance";
-        } else if (booking.card) {
-          if (booking.card.isContract) {
-            key = "contract";
-          } else {
-            key = "card";
-          }
-        } else if (!booking.card && !booking.coupon) {
-          key = "guest";
+    .forEach(booking => {
+      let key: CustomerType;
+      if (booking.coupon) {
+        key = "coupon";
+      } else if (booking.amountPaidInBalance) {
+        key = "balance";
+      } else if (booking.card) {
+        if (booking.card.isContract) {
+          key = "contract";
         } else {
-          key = "other";
+          key = "card";
         }
-        acc[key].adultsCount += booking.adultsCount || 0;
-        acc[key].kidsCount += booking.kidsCount || 0;
-        acc[key].count++;
-        acc[key].amountPaid = +(
-          acc[key].amountPaid + (booking.amountPaid || 0)
-        ).toFixed(10);
-
-        return acc;
-      },
-      {
-        card: { adultsCount: 0, kidsCount: 0, count: 0, amountPaid: 0 },
-        coupon: { adultsCount: 0, kidsCount: 0, count: 0, amountPaid: 0 },
-        guest: { adultsCount: 0, kidsCount: 0, count: 0, amountPaid: 0 },
-        balance: { adultsCount: 0, kidsCount: 0, count: 0, amountPaid: 0 },
-        contract: { adultsCount: 0, kidsCount: 0, count: 0, amountPaid: 0 },
-        other: { adultsCount: 0, kidsCount: 0, count: 0, amountPaid: 0 }
+      } else if (!booking.card && !booking.coupon) {
+        key = "guest";
+      } else {
+        key = "other";
       }
-    );
+      if (!customersByType[key]) {
+        customersByType[key] = {
+          adultsCount: 0,
+          kidsCount: 0,
+          count: 0,
+          amountPaid: 0
+        };
+      }
+      customersByType[key].adultsCount += booking.adultsCount || 0;
+      customersByType[key].kidsCount += booking.kidsCount || 0;
+      customersByType[key].count++;
+      customersByType[key].amountPaid = +(
+        customersByType[key].amountPaid + (booking.amountPaid || 0)
+      ).toFixed(10);
+    });
+
+  const customers = Object.keys(customersByType).reduce(
+    (total, type) =>
+      total +
+      customersByType[type as CustomerType].adultsCount +
+      customersByType[type as CustomerType].kidsCount,
+    0
+  );
 
   const bookingsCountByType = bookings.reduce((map, booking) => {
     if (!map[booking.type]) map[booking.type] = 0;
@@ -182,37 +167,72 @@ export default async (
     return map;
   }, {} as Record<Scene, number>);
 
-  const flowAmountByGateways: { [gateway: string]: number } = payments
-    .filter(p => flowGateways.includes(p.gateway))
-    .reduce((acc, payment) => {
+  const assetsByGateways: { [gateway: string]: number } = payments.reduce(
+    (acc, payment) => {
       if (!acc[payment.gateway]) {
         acc[payment.gateway] = 0;
       }
-      acc[payment.gateway] += payment.amount;
+      acc[payment.gateway] += payment.assets;
       return acc;
-    }, {} as Record<PaymentGateway, number>);
+    },
+    {} as Record<PaymentGateway, number>
+  );
 
-  const flowAmountByScenes: { [scene: string]: number } = payments
-    .filter(p => flowGateways.includes(p.gateway))
-    .reduce((acc, payment) => {
+  const assetsByScenes: { [scene: string]: number } = payments.reduce(
+    (acc, payment) => {
       if (!acc[payment.scene]) {
         acc[payment.scene] = 0;
       }
-      acc[payment.scene] += payment.amount;
+      acc[payment.scene] += payment.assets;
       return acc;
-    }, {} as Record<Scene, number>);
+    },
+    {} as Record<Scene, number>
+  );
 
-  const flowAmountByStores: { [storeId: string]: number } = payments
-    .filter(p => flowGateways.includes(p.gateway))
-    .reduce((acc, payment) => {
+  const assetsByStores: { [storeId: string]: number } = payments.reduce(
+    (acc, payment) => {
       if (!payment.store) return acc;
       const storeId = payment.store.toString();
       if (!acc[storeId]) {
         acc[storeId] = 0;
       }
-      acc[storeId] += payment.amount;
+      acc[storeId] += payment.assets;
       return acc;
-    }, {} as Record<string, number>);
+    },
+    {} as Record<string, number>
+  );
+
+  const assets = Object.keys(assetsByScenes).reduce(
+    (total, scene) => total + assetsByScenes[scene],
+    0
+  );
+
+  const revenueByScenes: { [scene: string]: number } = payments.reduce(
+    (acc, payment) => {
+      if (!acc[payment.scene]) {
+        acc[payment.scene] = 0;
+      }
+      acc[payment.scene] += payment.revenue;
+      return acc;
+    },
+    {} as Record<Scene, number>
+  );
+
+  const revenue = Object.keys(revenueByScenes).reduce(
+    (total, scene) => total + revenueByScenes[scene],
+    0
+  );
+
+  const amountByScenes: { [scene: string]: number } = payments.reduce(
+    (acc, payment) => {
+      if (!acc[payment.scene]) {
+        acc[payment.scene] = 0;
+      }
+      acc[payment.scene] += payment.amount;
+      return acc;
+    },
+    {} as Record<Scene, number>
+  );
 
   const couponsCount = bookings
     .filter(b => b.type === Scene.PLAY)
@@ -246,41 +266,6 @@ export default async (
       item.kidsCount = item.kidsCount / item.kidsPerCoupon;
       return item;
     });
-
-  const cardsSellCount = cards.reduce((acc, card) => {
-    let item = acc.find(i => i.name === card.title);
-
-    if (!item) {
-      item = {
-        name: card.title,
-        type: card.type,
-        count: 0,
-        isContract: !!card.isContract,
-        amount: 0
-      };
-      if (card.times !== undefined) {
-        item.times = 0;
-      }
-      if (card.balance !== undefined) {
-        item.balance = 0;
-      }
-
-      acc.push(item);
-    }
-
-    item.count++;
-    item.amount = +(item.amount + card.price).toFixed(10);
-    if (item.times !== undefined && card.times !== undefined) {
-      item.times += card.times;
-    }
-    if (item.balance !== undefined && card.balance !== undefined) {
-      item.balance = +(item.balance + card.balance).toFixed(10);
-    }
-    return acc;
-  }, [] as { name: string; type: string; count: number; isContract: boolean; times?: number; balance?: number; amount: number }[]);
-
-  const cardsSellRenewTimesCount = cards.filter(c => c.isRenewTimes).length;
-  const cardsSellFirstTimesCount = cards.filter(c => c.isFirstTimes).length;
 
   const cardsCount = bookings
     .filter(b => b.card)
@@ -330,6 +315,41 @@ export default async (
     .filter(p => p.gateway === PaymentGateway.Balance)
     .reduce((acc, p) => acc + (p.amountDeposit || p.amount), 0);
   // console.log("[DEBUG] Groups calculated:", Date.now() - starts);
+
+  const cardsSellCount = cards.reduce((acc, card) => {
+    let item = acc.find(i => i.name === card.title);
+
+    if (!item) {
+      item = {
+        name: card.title,
+        type: card.type,
+        count: 0,
+        isContract: !!card.isContract,
+        amount: 0
+      };
+      if (card.times !== undefined) {
+        item.times = 0;
+      }
+      if (card.balance !== undefined) {
+        item.balance = 0;
+      }
+
+      acc.push(item);
+    }
+
+    item.count++;
+    item.amount = +(item.amount + card.price).toFixed(10);
+    if (item.times !== undefined && card.times !== undefined) {
+      item.times += card.times;
+    }
+    if (item.balance !== undefined && card.balance !== undefined) {
+      item.balance = +(item.balance + card.balance).toFixed(10);
+    }
+    return acc;
+  }, [] as { name: string; type: string; count: number; isContract: boolean; times?: number; balance?: number; amount: number }[]);
+
+  const cardsSellRenewTimesCount = cards.filter(c => c.isRenewTimes).length;
+  const cardsSellFirstTimesCount = cards.filter(c => c.isFirstTimes).length;
 
   const dailyCustomers = await BookingModel.aggregate([
     { $match: { date: { $gte: dateRangeStartStr, $lte: dateEndStr } } },
@@ -500,25 +520,22 @@ export default async (
   // console.log("[DEBUG] Chart calculated:", Date.now() - starts);
 
   return {
-    flowAmount,
-    cardCouponAmount,
-    playAmount,
-    foodAmount,
-    foodSalesAmount,
-    eventSalesAmount,
-    mallAmount,
-    customerCount,
     bookingsCountByType,
-    flowAmountByGateways,
-    flowAmountByScenes,
-    flowAmountByStores,
+    customersByType,
+    customers,
+    assetsByGateways,
+    assetsByScenes,
+    assetsByStores,
+    assets,
+    revenueByScenes,
+    revenue,
+    amountByScenes,
     couponsCount,
+    cardsCount,
+    balanceCount,
     cardsSellCount,
     cardsSellFirstTimesCount,
     cardsSellRenewTimesCount,
-    cardsCount,
-    balanceCount,
-    customersByType,
     dailyCustomers,
     dailyFlowAmount,
     dailyCardCouponPayment
