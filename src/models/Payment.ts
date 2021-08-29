@@ -219,6 +219,10 @@ export const SceneLabel = {
     default:
       throw new Error("unsupported_payment_gateway");
   }
+  if (this.revenue < 0 && this.paid) {
+    // refund payment applies at once
+    this.appliedAt = new Date();
+  }
   next();
 })
 @post("save", function (this: DocumentType<Payment>) {
