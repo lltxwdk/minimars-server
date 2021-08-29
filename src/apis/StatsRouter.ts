@@ -198,6 +198,7 @@ export default (router: Router) => {
             ).toFixed(2),
             playAmount: +stats.playAmount.toFixed(2),
             foodAmount: +stats.foodAmount.toFixed(2),
+            foodSalesAmount: +stats.foodSalesAmount.toFixed(2),
             eventAmount: stats.flowAmountByScenes.event,
             partyAmount: +(stats.flowAmountByScenes.party || 0).toFixed(2),
             guestPlayBookingsCount:
