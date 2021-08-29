@@ -201,21 +201,19 @@ export default (router: Router) => {
             periodCardSellAmount,
             balanceSellAmount,
             otherCardSellAmount,
-            guestPlayAmount: +(
-              stats.customersByType.guest.amountPaid +
-              stats.customersByType.coupon.amountPaid
-            ).toFixed(2),
+            guestPlayAmount: +stats.customersByType.guest.amountPaid.toFixed(2),
+            couponPlayAmount:
+              +stats.customersByType.coupon.amountPaid.toFixed(2),
             playAmount: +stats.playAmount.toFixed(2),
             foodAmount: +stats.foodAmount.toFixed(2),
             foodSalesAmount: +stats.foodSalesAmount.toFixed(2),
-            eventAmount: stats.flowAmountByScenes.event,
+            eventSalesAmount: +stats.eventSalesAmount.toFixed(2),
             partyAmount: +(stats.flowAmountByScenes.party || 0).toFixed(2),
-            guestPlayBookingsCount:
-              stats.customersByType.guest.count +
-              stats.customersByType.coupon.count,
+            guestPlayBookingsCount: stats.customersByType.guest.count,
+            couponPlayBookingsCount: stats.customersByType.coupon.count,
             cardsCount: stats.cardsSellCount.reduce(
               (count, item) =>
-                count + item.type === "coupon" ? 0 : item.count,
+                count + (item.type === "coupon" ? 0 : item.count),
               0
             ),
             firstCardsCount: stats.cardsSellFirstTimesCount,

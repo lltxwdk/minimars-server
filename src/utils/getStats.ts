@@ -118,6 +118,10 @@ export default async (
     .filter(p => p.scene === Scene.FOOD)
     .reduce((amount, p) => amount + p.amount, 0);
 
+  const eventSalesAmount = payments
+    .filter(p => p.scene === Scene.EVENT)
+    .reduce((amount, p) => amount + p.amount, 0);
+
   const mallAmount = payments
     .filter(p => p.scene === Scene.MALL)
     .reduce((amount, p) => amount + (p.amountDeposit || p.amount), 0);
@@ -501,6 +505,7 @@ export default async (
     playAmount,
     foodAmount,
     foodSalesAmount,
+    eventSalesAmount,
     mallAmount,
     customerCount,
     bookingsCountByType,
