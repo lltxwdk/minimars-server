@@ -275,6 +275,16 @@ export default (router: Router) => {
               );
             }
           }
+          if (
+            booking.tableId &&
+            booking.store?.finalFoodOrderTime &&
+            moment().format("HH:mm:ss") >= booking.store?.finalFoodOrderTime
+          ) {
+            throw new HttpError(
+              400,
+              `抱歉，今日点单已于${booking.store.finalFoodOrderTime}结束`
+            );
+          }
         }
 
         if (booking.customer.isNew) {

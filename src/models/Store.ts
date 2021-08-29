@@ -132,6 +132,9 @@ export class Store {
   @prop({ type: Object })
   pospalPaymentMethodMap?: Record<string, PaymentGateway>;
 
+  @prop()
+  finalFoodOrderTime?: string;
+
   @prop({ type: Object, select: false })
   foodMenu?: Menu;
 
