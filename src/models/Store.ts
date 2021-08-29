@@ -279,6 +279,10 @@ export class Store {
     for (const ticket of result) {
       if (ticket.invalid) {
         console.log(`[STR] ${this.code}: ticket ${ticket.sn} is invalid.`);
+        const b = await BookingModel.findOne({ "providerData.sn": ticket.sn });
+        if (b && !b.tableId) {
+          await b.cancel();
+        }
         continue;
       }
       try {
