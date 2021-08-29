@@ -122,7 +122,7 @@ export class Card {
   isRenewTimes?: boolean;
 
   @prop({ type: Boolean })
-  isFirst?: boolean;
+  isFirstTimes?: boolean;
 
   @prop({
     ref: "Payment",

@@ -263,7 +263,7 @@ export default async (
   }, [] as { name: string; type: string; count: number; isContract: boolean; times?: number; balance?: number; amount: number }[]);
 
   const cardsSellRenewTimesCount = cards.filter(c => c.isRenewTimes).length;
-  const cardsSellFirstCount = cards.filter(c => c.isFirst).length;
+  const cardsSellFirstTimesCount = cards.filter(c => c.isFirstTimes).length;
 
   const cardsCount = bookingsPaid
     .filter(b => b.card)
@@ -495,7 +495,7 @@ export default async (
     flowAmountByStores,
     couponsCount,
     cardsSellCount,
-    cardsSellFirstCount,
+    cardsSellFirstTimesCount,
     cardsSellRenewTimesCount,
     cardsCount,
     balanceCount,

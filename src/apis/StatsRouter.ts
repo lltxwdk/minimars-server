@@ -4,9 +4,7 @@ import moment from "moment";
 import getStats from "../utils/getStats";
 import UserModel from "../models/User";
 import CardModel, { CardStatus } from "../models/Card";
-import StoreModel, { Store, storeMap } from "../models/Store";
-// @ts-ignore
-import xlsxPopulate from "xlsx-populate";
+import StoreModel, { storeMap } from "../models/Store";
 import xlsxTemplate from "xlsx-template";
 import { unlinkSync, readFileSync, writeFileSync } from "fs";
 
@@ -148,9 +146,6 @@ export default (router: Router) => {
   router.route("/daily-report/:date").get(
     handleAsyncErrors(async (req: Request, res: Response) => {
       const date = req.params.date;
-      // const workbook = await xlsxPopulate.fromFileAsync(
-      //   "./reports/templates/daily.xlsx"
-      // );
       const template = new xlsxTemplate(
         readFileSync("./reports/templates/daily.xlsx")
       );
@@ -163,8 +158,6 @@ export default (router: Router) => {
       } catch (e) {
         // keep silent when file does not exist
       }
-
-      // workbook.find("{{date}}", date);
 
       const stores = await StoreModel.find().where({
         code: {
@@ -214,7 +207,7 @@ export default (router: Router) => {
               (count, item) => count + item.count,
               0
             ),
-            firstCardsCount: stats.cardsSellFirstCount,
+            firstCardsCount: stats.cardsSellFirstTimesCount,
             renewCardsCount: stats.cardsSellRenewTimesCount,
             foodBookingsCount: stats.bookingsCountByType.food,
             foodBookingAvgAmount: +(
@@ -223,18 +216,13 @@ export default (router: Router) => {
             eventBookingsCount: stats.bookingsCountByType.event
           } as Record<string, any>;
 
-          // for (const field in values) {
-          //   workbook.find(`{{${store.code}.${field}}}`, values[field]);
-          // }
           for (const field in storeValues) {
             values[`${store.code}_${field}`] = storeValues[field];
           }
         })
       );
-      // template.substitute(1, values);
       template.substitute(1, values);
 
-      // await workbook.toFileAsync(path);
       const data = template.generate({ type: "nodebuffer" }) as Buffer;
       writeFileSync(path, data);
 
