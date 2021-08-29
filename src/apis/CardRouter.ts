@@ -244,13 +244,19 @@ export default (router: Router) => {
             })
           );
 
-          const timesCards = await CardModel.find({
-            status: { $ne: CardStatus.CANCELED },
-            customer: card.customer,
-            type: "times"
-          });
-          if (timesCards.length) {
-            card.isRenewTimes = true;
+          if (!card.isContract) {
+            const timesCards = await CardModel.find({
+              status: { $ne: CardStatus.CANCELED },
+              customer: card.customer,
+              type: "times",
+              isContract: { $ne: true }
+            });
+
+            if (timesCards.length) {
+              card.isRenewTimes = true;
+            } else {
+              card.isFirstTimes = true;
+            }
           }
         }
 
