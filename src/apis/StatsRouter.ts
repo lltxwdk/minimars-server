@@ -135,7 +135,7 @@ export default (router: Router) => {
       const stats = await getStats(
         dateInput,
         dateInputEnd,
-        req.query.store || req.user.store,
+        req.query.store || req.user.store?.id,
         !!req.query.popBookingCardCoupon,
         req.query.scene && req.query.scene.split(",")
       );
@@ -176,7 +176,7 @@ export default (router: Router) => {
       }
       await Promise.all(
         stores.map(async store => {
-          const stats = await getStats(date, date, store);
+          const stats = await getStats(date, date, store.id);
           const timesCardSellAmount = stats.cardsSellCount
             .filter(item => item.type === "times" && !item.isContract)
             .reduce((sum, item) => +(sum + item.amount).toFixed(2), 0);
@@ -204,12 +204,13 @@ export default (router: Router) => {
             guestPlayAmount: +stats.customersByType.guest.amountPaid.toFixed(2),
             couponPlayAmount:
               +stats.customersByType.coupon.amountPaid.toFixed(2),
-            playAmount: +stats.revenueByScenes.play.toFixed(2),
-            foodAmount: +stats.revenueByScenes.food.toFixed(2),
-            eventAmount: +stats.revenueByScenes.event.toFixed(2),
+            assets: +stats.assets.toFixed(2),
+            playAmount: +(stats.revenueByScenes.play || 0).toFixed(2),
+            foodAmount: +(stats.revenueByScenes.food || 0).toFixed(2),
+            eventAmount: +(stats.revenueByScenes.event || 0).toFixed(2),
             partyAmount: +(stats.revenueByScenes.party || 0).toFixed(2),
-            foodSalesAmount: +stats.amountByScenes.food.toFixed(2),
-            eventSalesAmount: +stats.amountByScenes.event.toFixed(2),
+            foodSalesAmount: +(stats.amountByScenes.food || 0).toFixed(2),
+            eventSalesAmount: +(stats.amountByScenes.event || 0).toFixed(2),
             guestPlayBookingsCount: stats.customersByType.guest.count,
             couponPlayBookingsCount: stats.customersByType.coupon.count,
             cardsCount: stats.cardsSellCount.reduce(

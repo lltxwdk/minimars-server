@@ -3,17 +3,15 @@ import BookingModel, { BookingStatus } from "../models/Booking";
 import PaymentModel, {
   PaymentGateway,
   flowGateways,
-  cardCouponGateways,
   Scene
 } from "../models/Payment";
-import { Store } from "../models/Store";
-import { DocumentType } from "@typegoose/typegoose";
 import CardModel, { CardStatus } from "../models/Card";
+import { Types } from "mongoose";
 
 export default async (
   dateInput?: string | Date,
   dateEndInput?: string | Date,
-  store?: DocumentType<Store>,
+  store?: string,
   popBookingCardCoupon = false,
   scenes?: Scene[]
 ) => {
@@ -45,7 +43,7 @@ export default async (
   );
 
   if (store) {
-    bookingsQuery.find({ store });
+    bookingsQuery.where({ store });
   }
 
   const paymentsQuery = PaymentModel.find({
@@ -73,7 +71,7 @@ export default async (
   });
 
   if (store) {
-    cardsQuery.find({ stores: [store] });
+    cardsQuery.where({ stores: [store] });
   }
 
   bookingsQuery.setOptions({
@@ -168,30 +166,29 @@ export default async (
     return map;
   }, {} as Record<Scene, number>);
 
-  const assetsByGateways: { [gateway: string]: number } = payments.reduce(
-    (acc, payment) => {
+  const assetsByGateways: { [gateway: string]: number } = payments
+    .filter(p => p.gateway !== PaymentGateway.Coupon)
+    .reduce((acc, payment) => {
       if (!acc[payment.gateway]) {
         acc[payment.gateway] = 0;
       }
       acc[payment.gateway] += payment.assets;
       return acc;
-    },
-    {} as Record<PaymentGateway, number>
-  );
+    }, {} as Record<PaymentGateway, number>);
 
-  const assetsByScenes: { [scene: string]: number } = payments.reduce(
-    (acc, payment) => {
+  const assetsByScenes: { [scene: string]: number } = payments
+    .filter(p => p.gateway !== PaymentGateway.Coupon)
+    .reduce((acc, payment) => {
       if (!acc[payment.scene]) {
         acc[payment.scene] = 0;
       }
       acc[payment.scene] += payment.assets;
       return acc;
-    },
-    {} as Record<Scene, number>
-  );
+    }, {} as Record<Scene, number>);
 
-  const assetsByStores: { [storeId: string]: number } = payments.reduce(
-    (acc, payment) => {
+  const assetsByStores: { [storeId: string]: number } = payments
+    .filter(p => p.gateway !== PaymentGateway.Coupon)
+    .reduce((acc, payment) => {
       if (!payment.store) return acc;
       const storeId = payment.store.toString();
       if (!acc[storeId]) {
@@ -199,9 +196,7 @@ export default async (
       }
       acc[storeId] += payment.assets;
       return acc;
-    },
-    {} as Record<string, number>
-  );
+    }, {} as Record<string, number>);
 
   const assets = Object.keys(assetsByScenes).reduce(
     (total, scene) => total + assetsByScenes[scene],
@@ -352,8 +347,14 @@ export default async (
   const cardsSellRenewTimesCount = cards.filter(c => c.isRenewTimes).length;
   const cardsSellFirstTimesCount = cards.filter(c => c.isFirstTimes).length;
 
+  const dailyBookingsCondition: Record<string, any> = {
+    date: { $gte: dateRangeStartStr, $lte: dateEndStr }
+  };
+  if (store) {
+    dailyBookingsCondition.store = Types.ObjectId(store);
+  }
   const dailyCustomers = await BookingModel.aggregate([
-    { $match: { date: { $gte: dateRangeStartStr, $lte: dateEndStr } } },
+    { $match: dailyBookingsCondition },
     {
       $project: {
         adultsCount: 1,
@@ -410,13 +411,18 @@ export default async (
     }
   ]);
 
+  const dailyPaymentsCondition: Record<string, any> = {
+    createdAt: { $gte: dateRangeStart, $lte: endOfDay },
+    paid: true
+  };
+
+  if (store) {
+    dailyPaymentsCondition.store = Types.ObjectId(store);
+  }
+
   const dailyFlowAmount = await PaymentModel.aggregate([
     {
-      $match: {
-        createdAt: { $gte: dateRangeStart, $lte: endOfDay },
-        paid: true,
-        gateway: { $in: flowGateways }
-      }
+      $match: { ...dailyPaymentsCondition, gateway: { $in: flowGateways } }
     },
     {
       $project: {
@@ -465,17 +471,13 @@ export default async (
     }
   ]);
 
-  const dailyCardCouponPayment = await PaymentModel.aggregate([
+  const dailyRevenue = await PaymentModel.aggregate([
     {
-      $match: {
-        createdAt: { $gte: dateRangeStart, $lte: endOfDay },
-        paid: true,
-        gateway: { $in: cardCouponGateways }
-      }
+      $match: dailyPaymentsCondition
     },
     {
       $project: {
-        amount: 1,
+        revenue: 1,
         date: {
           $dateToParts: {
             date: "$createdAt",
@@ -491,8 +493,8 @@ export default async (
           m: "$date.month",
           d: "$date.day"
         },
-        amount: {
-          $sum: "$amount"
+        revenue: {
+          $sum: "$revenue"
         }
       }
     },
@@ -514,7 +516,7 @@ export default async (
             }
           }
         },
-        amount: 1
+        revenue: 1
       }
     }
   ]);
@@ -539,6 +541,6 @@ export default async (
     cardsSellRenewTimesCount,
     dailyCustomers,
     dailyFlowAmount,
-    dailyCardCouponPayment
+    dailyRevenue
   };
 };
