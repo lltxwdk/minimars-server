@@ -8,7 +8,7 @@ import PaymentModel, {
 } from "../models/Payment";
 import { Store } from "../models/Store";
 import { DocumentType } from "@typegoose/typegoose";
-import CardModel from "../models/Card";
+import CardModel, { CardStatus } from "../models/Card";
 
 export default async (
   dateInput?: string | Date,
@@ -65,6 +65,7 @@ export default async (
   }
 
   const cardsQuery = CardModel.find({
+    status: { $ne: CardStatus.CANCELED },
     createdAt: {
       $gte: startOfDay,
       $lte: endOfDay
@@ -72,7 +73,7 @@ export default async (
   });
 
   if (store) {
-    cardsQuery.find({ stores: store });
+    cardsQuery.find({ stores: [store] });
   }
 
   bookingsQuery.setOptions({

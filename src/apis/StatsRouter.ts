@@ -206,9 +206,10 @@ export default (router: Router) => {
               +stats.customersByType.coupon.amountPaid.toFixed(2),
             playAmount: +stats.revenueByScenes.play.toFixed(2),
             foodAmount: +stats.revenueByScenes.food.toFixed(2),
+            eventAmount: +stats.revenueByScenes.event.toFixed(2),
+            partyAmount: +(stats.revenueByScenes.party || 0).toFixed(2),
             foodSalesAmount: +stats.amountByScenes.food.toFixed(2),
             eventSalesAmount: +stats.amountByScenes.event.toFixed(2),
-            partyAmount: +(stats.revenueByScenes.party || 0).toFixed(2),
             guestPlayBookingsCount: stats.customersByType.guest.count,
             couponPlayBookingsCount: stats.customersByType.coupon.count,
             cardsCount: stats.cardsSellCount.reduce(
