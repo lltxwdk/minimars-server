@@ -86,6 +86,9 @@ class FoodItem {
   @prop({ type: Number })
   sellPrice?: number;
 
+  @prop({ type: Number })
+  extraPrice?: number;
+
   @prop({ type: Boolean })
   isSpecialOffer?: boolean;
 
