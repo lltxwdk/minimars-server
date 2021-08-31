@@ -213,6 +213,7 @@ export default (router: Router) => {
             eventSalesAmount: +(stats.amountByScenes.event || 0).toFixed(2),
             guestPlayBookingsCount: stats.customersByType.guest.count,
             couponPlayBookingsCount: stats.customersByType.coupon.count,
+            cardPlayBookingsCount: stats.customersByType.card.count,
             cardsCount: stats.cardsSellCount.reduce(
               (count, item) =>
                 count + (item.type === "coupon" ? 0 : item.count),
