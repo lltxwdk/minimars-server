@@ -214,18 +214,17 @@ export default (router: Router) => {
     .put(
       handleAsyncErrors(async (req: Request, res: Response) => {
         const body = req.body as UserPutBody;
+        if (!req.user.can(Permission.STAFF)) {
+          delete body.role;
+        }
+        if (!req.user.can(Permission.CUSTOMER)) {
+          delete body.tags;
+        }
         if (!req.user.can(Permission.DEVELOP)) {
           (
-            [
-              "role",
-              "openid",
-              "cardType",
-              "balanceDeposit",
-              "balanceReward",
-              "tags",
-              "points",
-              "covers"
-            ] as Array<keyof User>
+            ["openid", "balanceDeposit", "balanceReward", "points"] as Array<
+              keyof User
+            >
           ).forEach(f => {
             delete body[f];
           });

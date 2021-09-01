@@ -160,7 +160,7 @@ export interface StoreQuery extends ListQuery {}
 
 export interface UserPostBody extends User {}
 
-export interface UserPutBody extends User {}
+export interface UserPutBody extends Partial<User> {}
 
 export interface UserQuery extends ListQuery {
   keyword?: string;
