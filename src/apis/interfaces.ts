@@ -158,7 +158,7 @@ export interface StorePutBody extends Store {}
 
 export interface StoreQuery extends ListQuery {}
 
-export interface UserPostBody extends User {}
+export interface UserPostBody extends Partial<User> {}
 
 export interface UserPutBody extends Partial<User> {}
 

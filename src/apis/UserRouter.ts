@@ -22,18 +22,17 @@ export default (router: Router) => {
     .post(
       handleAsyncErrors(async (req: Request, res: Response) => {
         const body = req.body as UserPostBody;
+        if (!req.user.can(Permission.STAFF)) {
+          delete body.role;
+        }
+        if (!req.user.can(Permission.CUSTOMER)) {
+          delete body.tags;
+        }
         if (!req.user.can(Permission.DEVELOP)) {
           (
-            [
-              "role",
-              "openid",
-              "cardType",
-              "cardNo",
-              "balanceDeposit",
-              "balanceReward",
-              "tags",
-              "points"
-            ] as Array<keyof User>
+            ["openid", "balanceDeposit", "balanceReward", "points"] as Array<
+              keyof User
+            >
           ).forEach(f => {
             delete body[f];
           });
