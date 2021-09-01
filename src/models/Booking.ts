@@ -612,6 +612,10 @@ export class Booking extends TimeStamps {
     let extraPayAmount = +(totalPayAmount - balancePayAmount).toFixed(2);
     // console.log(`[PAY] Extra payment amount is ${extraPayAmount}`);
 
+    if (this.card?.type === "coupon" && this.card.overPrice && !this.tableId) {
+      extraPayAmount = 0;
+    }
+
     if (extraPayAmount < 0) throw new Error("booking_payment_amount_overflow");
 
     if (paymentGateway === PaymentGateway.Points) {
