@@ -165,9 +165,20 @@ export default (router: Router) => {
           throw new HttpError(400, "抱歉，该卡券已售罄");
         }
 
+        let atStore: DocumentType<Store> | undefined = undefined;
+
+        if (query.atStore) {
+          atStore = (await StoreModel.findById(query.atStore)) || undefined;
+        }
+
         const card = cardType.issue(customer, {
           quantity: body.quantity,
-          balanceGroups: body.balanceGroups
+          balanceGroups: body.balanceGroups,
+          atStore:
+            !req.user.can(Permission.BOOKING_ALL_STORE) &&
+            customer.id !== req.user.id
+              ? req.user.store
+              : atStore || undefined
         });
 
         if (body.rewardedFromBooking) {
@@ -182,12 +193,6 @@ export default (router: Router) => {
         }
 
         try {
-          let atStore: DocumentType<Store> | null = null;
-          if (query.atStore) {
-            atStore = await StoreModel.findById(query.atStore);
-            console.log(`[CRD] Buy card ${card.id} at store ${atStore?.code}.`);
-          }
-
           await card.createPayment({
             paymentGateway:
               query.paymentGateway ||

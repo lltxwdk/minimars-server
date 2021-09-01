@@ -137,6 +137,18 @@ export class Card {
   @prop({ type: Date })
   expiresAtWas?: Date;
 
+  @prop({ type: Boolean })
+  cardsRewarded?: boolean;
+
+  @prop({ ref: "Booking" })
+  rewardedFromBooking?: Ref<Booking>;
+
+  @prop({ type: Object })
+  providerData?: Record<string, any>;
+
+  @prop({ ref: "Store" })
+  sellAtStore?: Ref<Store>;
+
   // properties from cardType
   @prop({ type: String, required: true })
   title!: string;
@@ -226,15 +238,6 @@ export class Card {
 
   @prop()
   partnerUrl?: string;
-
-  @prop({ type: Boolean })
-  cardsRewarded?: boolean;
-
-  @prop({ ref: "Booking" })
-  rewardedFromBooking?: Ref<Booking>;
-
-  @prop({ type: Object })
-  providerData?: Record<string, any>;
 
   get giftCode(): string | undefined {
     const card = this as unknown as DocumentType<Card>;

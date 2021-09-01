@@ -71,7 +71,7 @@ export default async (
   });
 
   if (store) {
-    cardsQuery.where({ stores: [store] });
+    cardsQuery.where({ sellAtStore: store });
   }
 
   bookingsQuery.setOptions({

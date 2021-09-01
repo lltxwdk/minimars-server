@@ -206,10 +206,12 @@ export class CardType {
     customer: DocumentType<User>,
     {
       quantity = undefined,
-      balanceGroups = undefined
+      balanceGroups = undefined,
+      atStore = undefined
     }: {
       quantity?: number;
       balanceGroups?: BalanceGroup[];
+      atStore?: DocumentType<Store>;
     } = {}
   ) {
     const card = new CardModel({
@@ -218,6 +220,10 @@ export class CardType {
 
     if (this.stores) {
       card.stores = this.stores.map(s => s.id);
+    }
+
+    if (atStore) {
+      card.sellAtStore = atStore;
     }
 
     (Object.keys(this.toObject()) as Array<keyof CardType>)
