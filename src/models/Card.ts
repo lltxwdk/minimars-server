@@ -351,6 +351,8 @@ export class Card {
             : -card.price;
       }
 
+      const revenue = -(refundAmount + debt).toFixed(8);
+
       // refund payment by refundAmount
       const refundPayment = new PaymentModel({
         scene: p.scene,
@@ -359,12 +361,13 @@ export class Card {
         amount: -refundAmount,
         assets: -refundAmount,
         debt,
-        revenue: -(refundAmount + debt).toFixed(8),
+        revenue,
         title: `退款：${p.title}`,
         card: p.card,
         times: card.timesLeft !== undefined ? -card.timesLeft : undefined,
         gateway: p.gateway,
-        original: p.id
+        original: p.id,
+        appliedAt: revenue !== 0 ? new Date() : undefined
       });
       p.refunded = true;
       await p.save();

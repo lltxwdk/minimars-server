@@ -302,7 +302,8 @@ async function createBooking(trade: any) {
       booking,
       title: orders.map((o: any) => o.title).join(", "),
       amount: 0,
-      amountInPoints: totalPointsPrice
+      amountInPoints: totalPointsPrice,
+      appliedAt: new Date()
     });
     await totalPointsPayment.save();
   }

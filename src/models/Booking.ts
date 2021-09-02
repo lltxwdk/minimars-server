@@ -847,7 +847,8 @@ export class Booking extends TimeStamps {
         card: p.card,
         times: p.times ? -p.times : undefined,
         gatewayData: p.gatewayData,
-        original: p.id
+        original: p.id,
+        appliedAt: p.appliedAt ? new Date() : undefined
       });
       p.refunded = true;
       await refundPayment.save();
@@ -867,7 +868,8 @@ export class Booking extends TimeStamps {
         booking: p.booking,
         gateway: p.gateway,
         gatewayData: p.gatewayData,
-        original: p.id
+        original: p.id,
+        appliedAt: p.appliedAt ? new Date() : undefined
       });
       p.refunded = true;
       await refundPayment.save();
@@ -887,7 +889,8 @@ export class Booking extends TimeStamps {
           title: `退款：${p.title}`,
           booking: p.booking,
           gateway: p.gateway,
-          original: p.id
+          original: p.id,
+          appliedAt: p.appliedAt ? new Date() : undefined
         });
         p.refunded = true;
         // refund payment should go before original save

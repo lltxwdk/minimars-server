@@ -593,7 +593,8 @@ export const initAgenda = async () => {
         }核销`,
         card: card.id,
         gateway: PaymentGateway.Card,
-        createdAt: periodEnd
+        createdAt: periodEnd,
+        appliedAt: periodEnd
       });
 
       await payment.save();
