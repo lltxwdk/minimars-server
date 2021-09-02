@@ -222,18 +222,23 @@ export default (router: Router) => {
       const queryParams = req.query as PaymentQuery;
       const query = PaymentModel.find().sort({ _id: -1 });
 
+      const $ors: Record<string, any> = [];
+
       if (!req.user.can(Permission.BOOKING_ALL_STORE)) {
         query.find({ store: req.user.store?.id });
       }
 
       if (queryParams.date) {
         if (queryParams.dateEnd === "null") delete queryParams.dateEnd;
-        const start = moment(queryParams.date, "YYYY-MM-DD").startOf("day");
-        const end = moment(
-          queryParams.dateEnd || queryParams.date,
-          "YYYY-MM-DD"
-        ).endOf("day");
-        query.find({ createdAt: { $gte: start, $lte: end } });
+        const start = moment(queryParams.date).startOf("day").toDate();
+        const end = moment(queryParams.dateEnd || queryParams.date)
+          .endOf("day")
+          .toDate();
+        if (queryParams.dateType === "applied") {
+          query.find({ appliedAt: { $gte: start, $lte: end } });
+        } else {
+          query.find({ createdAt: { $gte: start, $lte: end } });
+        }
       }
 
       if (queryParams.paid) {
@@ -241,6 +246,20 @@ export default (router: Router) => {
           query.find({ paid: false });
         } else {
           query.find({ paid: true });
+        }
+      }
+
+      if (queryParams.refunded) {
+        // when search refunded payment, provide refund payment as well
+        if (queryParams.refunded === "true") {
+          $ors.push({
+            $or: [{ refunded: true }, { original: { $ne: null } }]
+          });
+        } else {
+          query.where({
+            refunded: { $in: [null, false] },
+            original: null
+          });
         }
       }
 
@@ -254,8 +273,18 @@ export default (router: Router) => {
       }
 
       if (queryParams.title) {
-        query.find({
-          title: new RegExp("^" + escapeStringRegexp(queryParams.title))
+        // auto match refund payment as well
+        $ors.push({
+          $or: [
+            {
+              title: new RegExp("^" + escapeStringRegexp(queryParams.title))
+            },
+            {
+              title: new RegExp(
+                "^退款：" + escapeStringRegexp(queryParams.title)
+              )
+            }
+          ]
         });
       }
 
@@ -282,11 +311,13 @@ export default (router: Router) => {
         });
       }
 
-      (["store", "customer"] as Array<keyof PaymentQuery>).forEach(field => {
-        if (queryParams[field]) {
-          query.find({ [field]: queryParams[field] });
+      (["store", "customer", "card"] as Array<keyof PaymentQuery>).forEach(
+        field => {
+          if (queryParams[field]) {
+            query.find({ [field]: queryParams[field] });
+          }
         }
-      });
+      );
 
       if (queryParams.amount) {
         const amounts = queryParams.amount
@@ -298,6 +329,10 @@ export default (router: Router) => {
 
       if (queryParams.scene) {
         query.find({ scene: { $in: queryParams.scene.split(",") as Scene[] } });
+      }
+
+      if ($ors.length) {
+        query.where({ $and: $ors });
       }
 
       const payments = await query.find().limit(2e4).exec();
