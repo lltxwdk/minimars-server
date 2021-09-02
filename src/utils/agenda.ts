@@ -631,10 +631,10 @@ export const initAgenda = async () => {
       return done();
     }
     // this job is run every minute, but we need more frequency, so we use for and sleep
-    const peakInterval = 15;
-    const troughInterval = 30;
+    const peakInterval = 20;
+    const troughInterval = 60;
     const open = "09:30";
-    const close = "20:00";
+    const close = "20:30";
     const peaks = ["11:30-14:00", "17:30-18:30"];
     const stores = await StoreModel.find();
     const time = moment().format("HH:mm");
