@@ -223,9 +223,9 @@ export default (router: Router) => {
             renewCardsCount: stats.cardsSellRenewTimesCount,
             foodBookingsCount: stats.bookingsCountByType.food,
             foodBookingAvgAmount: +(
-              stats.revenueByScenes.food / stats.bookingsCountByType.food
+              stats.amountByScenes.food / stats.bookingsCountByType.food
             ).toFixed(2),
-            eventBookingsCount: stats.bookingsCountByType.event
+            eventBookingsCount: stats.bookingsCountByType.event || 0
           } as Record<string, any>;
 
           for (const field in storeValues) {
