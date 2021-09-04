@@ -180,6 +180,30 @@ interface UserInfo {
   qr_scene_str: string;
 }
 
+interface OrderInfo {
+  return_code: string;
+  return_msg: string;
+  result_code: string;
+  mch_id: string;
+  appid: string;
+  openid: string;
+  is_subscribe: string;
+  trade_type: string;
+  trade_state: string;
+  bank_type: string;
+  total_fee: string;
+  fee_type: string;
+  cash_fee: string;
+  cash_fee_type: string;
+  transaction_id: string;
+  out_trade_no: string;
+  attach: string;
+  time_end: string;
+  trade_state_desc: string;
+  nonce_str: string;
+  sign: string;
+}
+
 export async function getUsersInfo(openids: string[]) {
   const { user_info_list: usersInfo } = (await request(
     true,
@@ -289,6 +313,40 @@ export const refundOrder = async (
     total_fee: Math.max(Math.round(Math.abs(totalFee) * 100), 1),
     refund_fee: Math.max(Math.round(Math.abs(refundFee) * 100), 1)
   });
+};
+
+export const microPay = async (
+  outTradeNo: string,
+  totalFee: number,
+  body: string = " ",
+  authCode: string
+) => {
+  await pay.microPay({
+    body,
+    out_trade_no: outTradeNo,
+    total_fee: Math.max(Math.round(totalFee * 100), 1),
+    spbill_create_ip: "8.8.8.8",
+    auth_code: authCode
+  });
+  let orderInfo: OrderInfo = {} as OrderInfo;
+  while (orderInfo.trade_state !== "SUCCESS") {
+    await sleep(500);
+    orderInfo = Object.assign(
+      orderInfo,
+      (await pay.orderQuery({
+        out_trade_no: outTradeNo
+      })) as OrderInfo
+    );
+
+    if (orderInfo.trade_state === "USERPAYING") {
+      console.log(`[WEC] Micro pay ${outTradeNo} waiting user action.`);
+    }
+
+    if (orderInfo.trade_state === "SUCCESS") {
+      console.log(`[WEC] Micro pay ${outTradeNo} success.`);
+    }
+  }
+  return orderInfo;
 };
 
 export const payArgs = (gatewayData: {
