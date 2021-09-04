@@ -12,6 +12,8 @@ import HttpError from "../utils/HttpError";
 import CardTypeModel from "./CardType";
 import { Store } from "./Store";
 import updateTimes from "./plugins/updateTimes";
+import { Scene } from "./Payment";
+import moment from "moment";
 
 @plugin(updateTimes)
 @modelOptions({ options: { allowMixed: Severity.ALLOW } })
@@ -27,11 +29,29 @@ import updateTimes from "./plugins/updateTimes";
       }
     }
   }
+  if (this.start) {
+    this.start = moment(this.start).startOf("day").toDate();
+  }
+  if (this.end) {
+    this.end = moment(this.end).endOf("day").toDate();
+  }
+  if (this.fixedPrice === null) {
+    this.fixedPrice = undefined;
+  }
+  if (this.overPrice === null) {
+    this.overPrice = undefined;
+  }
   next();
 })
 export class Coupon {
   @prop({ required: true })
   title!: string;
+
+  @prop()
+  slug?: string;
+
+  @prop({ default: Scene.PLAY })
+  scene = Scene.PLAY;
 
   @prop({ ref: "Store" })
   stores!: Ref<Store>[];
@@ -48,6 +68,9 @@ export class Coupon {
   @prop({ type: Number, required: true })
   priceThirdParty!: number;
 
+  @prop({ type: Number })
+  priceThirdPartyInternal?: number;
+
   @prop({ type: Number, default: 2 })
   freeParentsPerKid: number = 2;
 
@@ -62,6 +85,18 @@ export class Coupon {
 
   @prop()
   rewardCardTypes?: string;
+
+  @prop({ type: Number })
+  overPrice?: number;
+
+  @prop({ type: Number })
+  discountPrice?: number;
+
+  @prop({ type: Number })
+  discountRate?: number;
+
+  @prop({ type: Number })
+  fixedPrice?: number;
 }
 
 const CouponModel = getModelForClass(Coupon, {

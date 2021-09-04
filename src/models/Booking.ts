@@ -449,12 +449,35 @@ export class Booking extends TimeStamps {
           bookingPrice.price = this.card.fixedPrice;
         }
       }
+      if (this.coupon) {
+        if (!this.populated("coupon")) {
+          await this.populate("coupon").execPopulate();
+        }
+        if (
+          !this.coupon.overPrice ||
+          bookingPrice.price >= this.coupon.overPrice
+        ) {
+          if (this.coupon.discountPrice) {
+            bookingPrice.price -= this.coupon.discountPrice;
+          } else if (this.coupon.discountRate) {
+            bookingPrice.price =
+              bookingPrice.price * (1 - this.coupon.discountRate);
+          }
+        }
+        if (this.coupon.fixedPrice) {
+          bookingPrice.price = this.coupon.fixedPrice;
+        }
+      }
     } else if (this.type === "party") {
       if (this.price) {
         bookingPrice.price = this.price;
       }
     } else {
       throw new Error();
+    }
+
+    if (bookingPrice.price < 0) {
+      bookingPrice.price = 0;
     }
 
     return bookingPrice;
