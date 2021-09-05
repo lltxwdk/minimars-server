@@ -13,7 +13,7 @@ import PaymentModel, {
   Scene,
   SceneLabel
 } from "../models/Payment";
-import StoreModel, { storeMap } from "../models/Store";
+import { storeMap } from "../models/Store";
 import { PaymentQuery, PaymentPutBody } from "./interfaces";
 import escapeStringRegexp from "escape-string-regexp";
 import { DocumentType } from "@typegoose/typegoose";
@@ -130,6 +130,11 @@ export default (router: Router) => {
           query.find({
             amount: { $lt: 0 }
           });
+        }
+
+        if (queryParams.store === "none") {
+          query.where({ store: null });
+          delete queryParams.store;
         }
 
         (["store", "customer", "card"] as Array<keyof PaymentQuery>).forEach(
