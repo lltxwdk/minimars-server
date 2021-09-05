@@ -7,6 +7,7 @@ import Axios, { AxiosRequestConfig } from "axios";
 import { User } from "../models/User";
 import { DocumentType } from "@typegoose/typegoose";
 import { sleep } from "./helper";
+import { storeMap } from "../models/Store";
 
 const appId = process.env.WEIXIN_APPID || "";
 const secret = process.env.WEIXIN_SECRET || "";
@@ -293,7 +294,7 @@ export const unifiedOrder = async (
   openid: string,
   body: string = " ",
   attach: string = "",
-  storeCode?: string
+  storeId?: string
 ) => {
   body = truncate(body, 128);
   const params = {
@@ -306,16 +307,19 @@ export const unifiedOrder = async (
     notify_url: `${apiRoot}wechat/pay/notify`,
     spbill_create_ip: "8.8.8.8"
   };
-  if (storeCode) {
-    const subMchId = process.env["WEIXIN_MCH_SUB_ID_" + storeCode];
+  const wechatPay = storeId ? payProvider : pay;
+  if (storeId) {
+    const store = storeMap[storeId];
+    const subMchId = process.env["WEIXIN_MCH_SUB_ID_" + store.code];
     if (!subMchId) {
-      throw new Error(`Sub MCH ID not found for store: ${storeCode}.`);
+      throw new Error(`Sub MCH ID not found for store: ${store.code}.`);
     }
     // @ts-ignore
     params.sub_mch_id = subMchId;
   }
-  const orderData = await (storeCode ? payProvider : pay).unifiedOrder(params);
-  if (!pay.verifySign(orderData)) throw new Error("WechatPay sign error.");
+  const orderData = await wechatPay.unifiedOrder(params);
+  if (!wechatPay.verifySign(orderData))
+    throw new Error("WechatPay sign error.");
   if (orderData.result_code === "FAIL")
     throw new Error(`Trade failed: ${JSON.stringify(orderData)}`);
 
@@ -380,6 +384,7 @@ export const microPay = async (
 export const payArgs = (gatewayData: {
   nonce_str: string;
   prepay_id: string;
+  sub_mch_id?: string;
 }) => {
   const timeStamp = String(Date.now()).substr(0, 10);
   const nonceStr = gatewayData.nonce_str;
@@ -389,15 +394,15 @@ export const payArgs = (gatewayData: {
     nonceStr,
     package: _package,
     paySign: utils.sign(
-      "MD5" as SignType,
+      SignType.MD5,
       {
         appId: appId,
         timeStamp,
         nonceStr,
         package: _package,
-        signType: "MD5"
+        signType: SignType.MD5
       },
-      mchKey
+      gatewayData.sub_mch_id ? mchProviderKey : mchKey
     )
   };
 };

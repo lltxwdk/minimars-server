@@ -93,7 +93,8 @@ export const SceneLabel = {
           this.amount,
           customer.openid,
           this.title,
-          this.attach
+          this.attach,
+          this.store ? this.store.toString() : undefined
         );
         Object.assign(this.gatewayData, wechatUnifiedOrderData);
       } else {

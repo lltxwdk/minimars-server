@@ -135,6 +135,7 @@ export interface PaymentQuery extends ListQuery {
   direction?: "payment" | "refund";
   amount?: string;
   scene?: string;
+  store?: string;
 }
 
 export interface PostPostBody extends Post {}
