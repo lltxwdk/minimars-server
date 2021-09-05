@@ -13,6 +13,9 @@ const secret = process.env.WEIXIN_SECRET || "";
 const mchId = process.env.WEIXIN_MCH_ID || "";
 const mchKey = process.env.WEIXIN_MCH_KEY || "";
 const mchCertPath = process.env.WEIXIN_MCH_CERT_PATH || "";
+const mchProviderId = process.env.WEIXIN_MCH_PROVIDER_ID || "";
+const mchProviderKey = process.env.WEIXIN_MCH_PROVIDER_KEY || "";
+const mchProviderCertPath = process.env.WEIXIN_MCH_PROVIDER_CERT_PATH || "";
 const appIdMp = process.env.WEIXIN_APPID_MP || "";
 const secretMp = process.env.WEIXIN_SECRET_MP || "";
 const apiRoot = process.env.API_ROOT || "";
@@ -20,16 +23,27 @@ const accessToken = { token: "", expiresAt: 0 };
 const accessTokenMp = { token: "", expiresAt: 0 };
 
 const pfx = mchCertPath ? fs.readFileSync(mchCertPath) : Buffer.alloc(0);
+const pfxProvider = mchProviderCertPath
+  ? fs.readFileSync(mchProviderCertPath)
+  : Buffer.alloc(0);
 
 export const oAuth = WXOauth({
   appid: appId,
   secret: secret
 });
+
 export const pay = new Pay({
   appId: appId,
   mchId: mchId,
   key: mchKey,
   pfx
+});
+
+export const payProvider = new Pay({
+  appId: appIdMp,
+  mchId: mchProviderId,
+  key: mchProviderKey,
+  pfx: pfxProvider
 });
 
 function handleError(res: any) {
@@ -278,10 +292,11 @@ export const unifiedOrder = async (
   totalFee: number,
   openid: string,
   body: string = " ",
-  attach: string = ""
+  attach: string = "",
+  storeCode?: string
 ) => {
   body = truncate(body, 128);
-  const orderData = await pay.unifiedOrder({
+  const params = {
     body,
     attach,
     out_trade_no: outTradeNo,
@@ -290,7 +305,16 @@ export const unifiedOrder = async (
     openid,
     notify_url: `${apiRoot}wechat/pay/notify`,
     spbill_create_ip: "8.8.8.8"
-  });
+  };
+  if (storeCode) {
+    const subMchId = process.env["WEIXIN_MCH_SUB_ID_" + storeCode];
+    if (!subMchId) {
+      throw new Error(`Sub MCH ID not found for store: ${storeCode}.`);
+    }
+    // @ts-ignore
+    params.sub_mch_id = subMchId;
+  }
+  const orderData = await (storeCode ? payProvider : pay).unifiedOrder(params);
   if (!pay.verifySign(orderData)) throw new Error("WechatPay sign error.");
   if (orderData.result_code === "FAIL")
     throw new Error(`Trade failed: ${JSON.stringify(orderData)}`);
@@ -321,20 +345,24 @@ export const microPay = async (
   body: string = " ",
   authCode: string
 ) => {
-  await pay.microPay({
+  await payProvider.microPay({
     body,
     out_trade_no: outTradeNo,
     total_fee: Math.max(Math.round(totalFee * 100), 1),
     spbill_create_ip: "8.8.8.8",
-    auth_code: authCode
+    auth_code: authCode,
+    // @ts-ignore
+    sub_mch_id: process.env.WEIXIN_MCH_SUB_ID_TS
   });
   let orderInfo: OrderInfo = {} as OrderInfo;
   while (orderInfo.trade_state !== "SUCCESS") {
     await sleep(500);
     orderInfo = Object.assign(
       orderInfo,
-      (await pay.orderQuery({
-        out_trade_no: outTradeNo
+      (await payProvider.orderQuery({
+        out_trade_no: outTradeNo,
+        // @ts-ignore
+        sub_mch_id: "1612912457"
       })) as OrderInfo
     );
 

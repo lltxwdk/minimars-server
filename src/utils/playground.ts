@@ -5,8 +5,9 @@ import PaymentModel, { PaymentGateway, Scene } from "../models/Payment";
 import StoreModel from "../models/Store";
 import UserModel, { User } from "../models/User";
 import agenda from "./agenda";
+import { sleep } from "./helper";
 import Pospal from "./pospal";
-import { getQrcode } from "./wechat";
+import { getQrcode, microPay, pay } from "./wechat";
 import { getApprovalDetail } from "./wework";
 import {
   getTrade,
@@ -91,6 +92,8 @@ export default async function playground() {
     // saveCardTypeQr("gzr-688", "BY");
     // saveCardTypeQr("gzr-888", "HX");
     // saveCardTypeQr("gzr-688", "HX");
+    const out_trade_no = "test-00014";
+    // await microPay(out_trade_no, 0.01, "测试扫码支付", "134900795232914219");
   } catch (e) {
     console.error(e);
   }
