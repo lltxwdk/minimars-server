@@ -38,6 +38,7 @@ export interface BookingPutBody extends Partial<Booking> {}
 
 export interface BookingPostQuery {
   paymentGateway?: PaymentGateway;
+  paymentGateways?: string;
   useBalance?: "false";
   customerKeyword?: string;
 }

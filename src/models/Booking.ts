@@ -11,7 +11,12 @@ import moment from "moment";
 import updateTimes from "./plugins/updateTimes";
 import autoPopulate from "./plugins/autoPopulate";
 import { config } from "../models/Config";
-import PaymentModel, { Payment, PaymentGateway, Scene } from "./Payment";
+import PaymentModel, {
+  Payment,
+  PaymentGateway,
+  PaymentGatewayGroup,
+  Scene
+} from "./Payment";
 import UserModel, { User } from "./User";
 import { storeMap, Store } from "./Store";
 import { Card } from "./Card";
@@ -518,12 +523,14 @@ export class Booking extends TimeStamps {
       paymentGateway,
       useBalance = true,
       balanceAmount = undefined,
-      atReception = false
+      atReception = false,
+      paymentGatewayGroups = undefined
     }: {
       paymentGateway?: PaymentGateway;
       useBalance?: boolean;
       balanceAmount?: number;
       atReception?: boolean;
+      paymentGatewayGroups?: PaymentGatewayGroup[];
     },
     amount: number,
     amountInPoints?: number
@@ -665,6 +672,40 @@ export class Booking extends TimeStamps {
       await this.paymentSuccess(atReception);
     } else if (!extraPayAmount) {
       await this.paymentSuccess(atReception);
+    } else if (paymentGatewayGroups) {
+      for (const paymentGatewayGroup of paymentGatewayGroups) {
+        if (
+          paymentGatewayGroup.gateway === PaymentGateway.WechatPay &&
+          this.customer?.tags.includes("payment-test")
+        ) {
+          extraPayAmount /= 1e4;
+        }
+
+        const extraPayment = new PaymentModel({
+          scene: this.type,
+          customer: this.customer,
+          store: this.store?.id,
+          amount: paymentGatewayGroup.amount,
+          title: this.title,
+          attach,
+          booking: this.id,
+          gateway: paymentGatewayGroup.gateway,
+          gatewayData: {
+            atReception
+          }
+        });
+
+        await extraPayment.save();
+        this.payments.push(extraPayment);
+      }
+
+      if (
+        !paymentGatewayGroups
+          .map(g => g.gateway)
+          .includes(PaymentGateway.WechatPay)
+      ) {
+        await this.paymentSuccess(atReception);
+      }
     } else {
       if (!paymentGateway) {
         throw new Error("missing_gateway");

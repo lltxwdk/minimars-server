@@ -427,6 +427,11 @@ export const receptionGateways = [
   PaymentGateway.Coupon
 ];
 
+export interface PaymentGatewayGroup {
+  gateway: PaymentGateway;
+  amount: number;
+}
+
 const PaymentModel = getModelForClass(Payment, {
   schemaOptions: {
     toJSON: {

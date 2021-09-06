@@ -11,7 +11,11 @@ import BookingModel, {
   paidBookingStatus
 } from "../models/Booking";
 import UserModel from "../models/User";
-import PaymentModel, { PaymentGateway, Scene } from "../models/Payment";
+import PaymentModel, {
+  PaymentGateway,
+  PaymentGatewayGroup,
+  Scene
+} from "../models/Payment";
 import CardModel, { CardStatus } from "../models/Card";
 import { config } from "../models/Config";
 import {
@@ -306,9 +310,16 @@ export default (router: Router) => {
           const paymentGateway =
             query.paymentGateway ||
             (req.ua.isWechat ? PaymentGateway.WechatPay : undefined);
+          const paymentGatewayGroups = query.paymentGateways
+            ?.split(",")
+            .map(pg => {
+              const [gateway, amount] = pg.split(":");
+              return { gateway, amount: +amount } as PaymentGatewayGroup;
+            });
           await booking.createPayment(
             {
               paymentGateway,
+              paymentGatewayGroups,
               useBalance: query.useBalance !== "false",
               balanceAmount:
                 booking.type === Scene.FOOD && booking.tableId
