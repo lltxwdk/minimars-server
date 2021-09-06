@@ -82,6 +82,10 @@ export default (router: Router) => {
           `[BOK] Create ${booking.id} for customer ${booking.customer.mobile} ${booking.customer.id}.`
         );
 
+        if (req.user.role && req.user.store) {
+          booking.store = req.user.store;
+        }
+
         await booking.populate("store").execPopulate();
 
         if (!booking.store || !booking.store.name) {
