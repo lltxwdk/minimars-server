@@ -307,8 +307,9 @@ export const unifiedOrder = async (
     notify_url: `${apiRoot}wechat/pay/notify`,
     spbill_create_ip: "8.8.8.8"
   };
-  const wechatPay = storeId ? payProvider : pay;
-  if (storeId) {
+  const disableWechatPayProvider = !!process.env.DISABLE_WECHAT_PAY_PROVIDER;
+  const wechatPay = storeId && !disableWechatPayProvider ? payProvider : pay;
+  if (storeId && !disableWechatPayProvider) {
     const store = storeMap[storeId];
     const subMchId = process.env["WEIXIN_MCH_SUB_ID_" + store.code];
     if (!subMchId) {
