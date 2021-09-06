@@ -143,7 +143,9 @@ export default async (
       }
       customersByType[key].adultsCount += booking.adultsCount || 0;
       customersByType[key].kidsCount += booking.kidsCount || 0;
-      customersByType[key].count++;
+      if (booking.kidsCount) {
+        customersByType[key].count++;
+      }
       customersByType[key].amountPaid = +(
         customersByType[key].amountPaid + (booking.amountPaid || 0)
       ).toFixed(10);
