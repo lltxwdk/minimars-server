@@ -145,7 +145,7 @@ export default (router: Router) => {
 
   router.route("/daily-report/:date").get(
     handleAsyncErrors(async (req: Request, res: Response) => {
-      const date = req.params.date;
+      const [date, dateEnd] = req.params.date.split("~");
       const template = new xlsxTemplate(
         readFileSync(
           `./reports/templates/${req.user.store ? "daily-store" : "daily"}.xlsx`
@@ -154,7 +154,7 @@ export default (router: Router) => {
 
       const filename = `${
         req.user.store ? req.user.store.name : "运营部"
-      }日报 ${date}.xlsx`;
+      }日报 ${req.params.date}.xlsx`;
       const path = `./reports/${filename}`;
 
       try {
@@ -170,13 +170,13 @@ export default (router: Router) => {
             : ["TS", "JN", "BY", "HX", "DY"]
         }
       });
-      const values: Record<string, any> = { date };
+      const values: Record<string, any> = { date: req.params.date };
       if (req.user.store) {
         values.store = req.user.store.name;
       }
       await Promise.all(
         stores.map(async store => {
-          const stats = await getStats(date, date, store.id);
+          const stats = await getStats(date, dateEnd || date, store.id);
           const timesCardSellAmount = stats.cardsSellCount
             .filter(item => item.type === "times" && !item.isContract)
             .reduce((sum, item) => +(sum + item.amount).toFixed(2), 0);

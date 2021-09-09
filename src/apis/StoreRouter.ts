@@ -7,8 +7,7 @@ import StoreModel, { Store } from "../models/Store";
 import { StoreQuery, StorePostBody, StorePutBody } from "./interfaces";
 import { DocumentType } from "@typegoose/typegoose";
 import { Permission } from "../models/Role";
-import Pospal, { ProductInCustomerMenu } from "../utils/pospal";
-import { config } from "../models/Config";
+import Pospal from "../utils/pospal";
 import agenda from "../utils/agenda";
 
 export default (router: Router) => {
