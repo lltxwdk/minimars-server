@@ -39,7 +39,8 @@ import { Gift } from "./Gift";
   { path: "role" },
   { path: "covers", select: "title posterUrl" },
   ,
-  { path: "currentCover", select: "title posterUrl" }
+  { path: "currentCover", select: "title posterUrl" },
+  { path: "files" }
 ])
 @index({
   name: "text",
@@ -143,8 +144,11 @@ export class User {
   @prop()
   youzanId?: string;
 
-  @prop({ ref: "Store" }) // manager only
+  @prop({ ref: "Store" })
   store?: DocumentType<Store>;
+
+  @prop({ ref: "File" })
+  files?: DocumentType<File>[];
 
   @prop({ type: Number }) // below for customer only
   balanceDeposit?: number;
