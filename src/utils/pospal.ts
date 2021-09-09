@@ -628,10 +628,8 @@ export default class Pospal {
   async addOnlineOrder(booking: DocumentType<Booking>): Promise<void> {
     if (!booking.items) throw new Error("missing_food_items");
     if (!booking.customer) throw new Error("food_booking_missing_customer");
-    if (!booking.tableId) throw new Error("missing_table_id");
-
-    const [restaurantAreaName, restaurantTableName] =
-      booking.tableId.split(".");
+    if (!booking.tableId && !booking.pagerId)
+      throw new Error("missing_table_pager_id");
 
     const items = booking.items.map(i => ({
       productUid: i.productUid,
@@ -669,7 +667,7 @@ export default class Pospal {
       });
     });
 
-    const data = {
+    const data: Record<string, any> = {
       payMethod: "payCode_17",
       customerNumber: booking.customer.pospalId,
       orderDateTime: moment(booking.createdAt).format("YYYY-MM-DD HH:mm:ss"),
@@ -680,17 +678,27 @@ export default class Pospal {
       deliveryType: 1,
       payOnLine: 1,
       // dinnersNumber:3 // 就餐人数
-      restaurantAreaName,
-      restaurantTableName,
       orderRemark: booking.remarks,
       orderSource: "openApi",
       totalAmount: booking.payments
         .filter(p => p.paid)
         .reduce((amount, p) => amount + p.amount, 0)
         .toFixed(2),
-      daySeq: booking.tableId.split(".")[1] + "-" + moment().format("HHmmss"),
+      daySeq:
+        (booking.tableId
+          ? booking.tableId.split(".")[1]
+          : "P" + booking.pagerId) +
+        "-" +
+        moment().format("HHmmss"),
       items
     };
+
+    if (booking.tableId) {
+      const [restaurantAreaName, restaurantTableName] =
+        booking.tableId.split(".");
+      data.restaurantAreaName = restaurantAreaName;
+      data.restaurantTableName = restaurantTableName;
+    }
 
     console.log(
       `[PSP${this.storeCode}] Food order request: ${JSON.stringify(data)}`

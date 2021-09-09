@@ -261,6 +261,9 @@ export class Booking extends TimeStamps {
   @prop({ type: String })
   tableId?: string;
 
+  @prop({ type: String })
+  pagerId?: string;
+
   @prop({ type: FoodItem })
   items?: FoodItem[];
 
@@ -753,7 +756,10 @@ export class Booking extends TimeStamps {
   async paymentSuccess(this: DocumentType<Booking>, atReception = false) {
     // conditional change booking status
     if (this.type === Scene.FOOD) {
-      if (!this.tableId || process.env.DISABLE_FOOD_ONLINE_ORDER) {
+      if (
+        (!this.tableId && !this.pagerId) ||
+        process.env.DISABLE_FOOD_ONLINE_ORDER
+      ) {
         this.status = BookingStatus.FINISHED;
       } else {
         if (!this.store) throw new Error("food_booking_missing_store");
@@ -771,6 +777,7 @@ export class Booking extends TimeStamps {
             sn: res.orderNo
           };
         } catch (e) {
+          console.error(e.message);
           console.log(`[BOK] Error create food order, cancel...`);
           await this.cancel();
           throw new HttpError(400, "点餐下单发生错误，资金已原路退回");
