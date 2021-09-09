@@ -525,6 +525,12 @@ export default class Pospal {
         this.queryAllProductAttribute()
       ]);
 
+    const cdnBase = process.env.UPLOAD_BASE || "";
+
+    productImages.forEach(pi => {
+      pi.imageUrl = pi.imageUrl.replace(/https?:\/\/.*?\//, cdnBase);
+    });
+
     const openProducts = products.filter(
       p => p.enable && p.sellPrice > 0 && p.stock > 0
     );
