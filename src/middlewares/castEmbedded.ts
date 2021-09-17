@@ -31,7 +31,7 @@ export default async function (
       }
     });
     if (
-      ["payments", "cards", "stores"].includes(key) &&
+      ["payments", "cards", "stores", "foodCoupons"].includes(key) &&
       Array.isArray(req.body[key])
     ) {
       req.body[key] = req.body[key].map((item: any) => item.id || item);

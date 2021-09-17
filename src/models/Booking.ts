@@ -123,6 +123,7 @@ class FoodItem {
   { path: "payments", options: { sort: { _id: -1 } }, select: "-customer" },
   { path: "card", select: "-content" },
   { path: "coupon", select: "-content" },
+  { path: "foodCoupons", select: "-content" },
   { path: "event", select: "-content" },
   { path: "gift", select: "-content" }
 ])
@@ -235,6 +236,9 @@ export class Booking extends TimeStamps {
 
   @prop({ ref: "Coupon" })
   coupon?: DocumentType<Coupon>;
+
+  @prop({ ref: "Coupon" })
+  foodCoupons?: DocumentType<Coupon>[];
 
   @prop({ ref: "Event" })
   event?: DocumentType<Event>;
@@ -457,23 +461,35 @@ export class Booking extends TimeStamps {
           bookingPrice.price = this.card.fixedPrice;
         }
       }
-      if (this.coupon) {
-        if (!this.populated("coupon")) {
-          await this.populate("coupon").execPopulate();
+      if (this.foodCoupons?.length) {
+        if (!this.populated("foodCoupons")) {
+          await this.populate("foodCoupons").execPopulate();
         }
-        if (
-          !this.coupon.overPrice ||
-          bookingPrice.price >= this.coupon.overPrice
-        ) {
-          if (this.coupon.discountPrice) {
-            bookingPrice.price -= this.coupon.discountPrice;
-          } else if (this.coupon.discountRate) {
-            bookingPrice.price =
-              bookingPrice.price * (1 - this.coupon.discountRate);
+        for (const coupon of this.foodCoupons) {
+          if (coupon.setFoods?.length) {
+            coupon.setFoods.forEach(foodLine => {
+              const [foodName, discountPriceStr] = foodLine.split(/\s*\|\s*/);
+              const foodItem = this.items?.find(i => i.name === foodName);
+              if (foodItem) {
+                if (discountPriceStr) {
+                  bookingPrice.price = +(
+                    bookingPrice.price - +discountPriceStr
+                  ).toFixed(2);
+                } else {
+                  bookingPrice.price = +(
+                    bookingPrice.price - (foodItem.sellPrice || 0)
+                  ).toFixed(2);
+                }
+              }
+            });
           }
-        }
-        if (this.coupon.fixedPrice) {
-          bookingPrice.price = this.coupon.fixedPrice;
+          if (coupon.discountPrice) {
+            if (!coupon.overPrice || bookingPrice.price >= coupon.overPrice) {
+              bookingPrice.price = +(
+                bookingPrice.price - coupon.discountPrice
+              ).toFixed(2);
+            }
+          }
         }
       }
     } else if (this.type === "party") {
