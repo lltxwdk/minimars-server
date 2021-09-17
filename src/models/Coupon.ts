@@ -48,6 +48,9 @@ export class Coupon {
   title!: string;
 
   @prop()
+  type?: string;
+
+  @prop()
   slug?: string;
 
   @prop({ default: Scene.PLAY })
@@ -97,6 +100,9 @@ export class Coupon {
 
   @prop({ type: Number })
   fixedPrice?: number;
+
+  @prop({ type: String })
+  setFoods?: string[];
 }
 
 const CouponModel = getModelForClass(Coupon, {
