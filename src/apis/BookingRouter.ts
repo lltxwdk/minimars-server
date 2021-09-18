@@ -447,6 +447,7 @@ export default (router: Router) => {
               "coupon"
             ]
           });
+          query.where({ status: { $in: paidBookingStatus } });
           query.select(
             "customer date checkInAt store adultsCount kidsCount amountPaid"
           );
