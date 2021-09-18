@@ -466,6 +466,11 @@ export class Booking extends TimeStamps {
           await this.populate("foodCoupons").execPopulate();
         }
         for (const coupon of this.foodCoupons) {
+          if (coupon.price) {
+            bookingPrice.price = +(bookingPrice.price + coupon.price).toFixed(
+              2
+            );
+          }
           if (coupon.setFoods?.length) {
             coupon.setFoods.forEach(foodLine => {
               const [foodName, discountPriceStr] = foodLine.split(/\s*\|\s*/);
