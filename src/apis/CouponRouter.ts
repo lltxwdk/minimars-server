@@ -47,6 +47,16 @@ export default (router: Router) => {
           query.find({ enabled: queryParams.enabled !== "false" });
         }
 
+        if (queryParams.title) {
+          query.where({ title: new RegExp(queryParams.title) });
+        }
+
+        (["stores", "scene"] as Array<keyof CouponQuery>).forEach(field => {
+          if (queryParams[field]) {
+            query.find({ [field]: queryParams[field] });
+          }
+        });
+
         let total = await query.countDocuments();
         const page = await query
           .find()

@@ -97,6 +97,9 @@ export interface CouponPutBody extends Partial<Coupon> {}
 
 export interface CouponQuery extends ListQuery {
   enabled: "true" | "false";
+  title: string;
+  scene: string;
+  stores: string;
 }
 
 export interface EventPostBody extends Partial<Event> {}
