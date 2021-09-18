@@ -190,7 +190,9 @@ export const SceneLabel = {
     case PaymentGateway.MallPos:
     case PaymentGateway.Mall:
     case PaymentGateway.Agency:
-      this.assets = this.amount;
+      if (!this.assets) {
+        this.assets = this.amount;
+      }
       if (!this.revenue && !this.debt) {
         if (this.booking) {
           this.revenue = this.amount;

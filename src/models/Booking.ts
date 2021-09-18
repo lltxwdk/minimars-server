@@ -614,14 +614,21 @@ export class Booking extends TimeStamps {
       ) {
         throw new Error("coupon_kids_count_not_match");
       }
+      const couponAmount =
+        (this.coupon.priceThirdParty *
+          (this.kidsCount || this.adultsCount || 1)) /
+        (this.coupon.kidsCount || 1);
+      const couponRevenue =
+        ((this.coupon.priceThirdPartyInternal || this.coupon.priceThirdParty) *
+          (this.kidsCount || this.adultsCount || 1)) /
+        (this.coupon.kidsCount || 1);
       const couponPayment = new PaymentModel({
         scene: this.type,
         customer: this.customer,
         store: this.store,
-        amount:
-          (this.coupon.priceThirdParty *
-            (this.kidsCount || this.adultsCount || 1)) /
-          (this.coupon.kidsCount || 1),
+        amount: couponAmount,
+        assets: couponRevenue,
+        revenue: couponRevenue,
         title: this.coupon.title + " " + this.title,
         attach,
         booking: this.id,

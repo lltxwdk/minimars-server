@@ -242,7 +242,7 @@ export default async (
       if (!item) {
         item = {
           name: coupon.title,
-          price: coupon.priceThirdParty,
+          price: coupon.priceThirdPartyInternal || coupon.priceThirdParty,
           kidsCount: 0,
           adultsCount: 0,
           amount: 0,
