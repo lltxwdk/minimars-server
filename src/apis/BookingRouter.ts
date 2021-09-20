@@ -318,7 +318,8 @@ export default (router: Router) => {
               paymentGatewayGroups,
               useBalance: query.useBalance !== "false",
               balanceAmount:
-                booking.type === Scene.FOOD && booking.tableId
+                booking.type === Scene.FOOD &&
+                (booking.tableId || booking.pagerId)
                   ? bookingPrice.nonSpecialOfferPrice
                   : undefined,
               atReception:

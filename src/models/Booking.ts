@@ -438,7 +438,9 @@ export class Booking extends TimeStamps {
           bookingPrice.price + this.calcItemPrice(this.items)
         ).toFixed(2);
         bookingPrice.nonSpecialOfferPrice = this.calcItemPrice(
-          this.items.filter(i => !i.isSpecialOffer)
+          this.items.filter(
+            i => !i.isSpecialOffer && !i.comment?.includes("套餐内含")
+          )
         );
       }
       if (this.card) {
@@ -450,7 +452,8 @@ export class Booking extends TimeStamps {
         }
         if (
           this.card.type === "coupon" &&
-          (!this.card.overPrice || bookingPrice.price >= this.card.overPrice)
+          (!this.card.overPrice ||
+            (bookingPrice.nonSpecialOfferPrice || 0) >= this.card.overPrice)
         ) {
           if (this.card.discountPrice) {
             bookingPrice.price -= this.card.discountPrice;
@@ -458,9 +461,10 @@ export class Booking extends TimeStamps {
             bookingPrice.price =
               bookingPrice.price * (1 - this.card.discountRate);
           }
-        }
-        if (this.card.type === "coupon" && this.card.fixedPrice) {
+        } else if (this.card.type === "coupon" && this.card.fixedPrice) {
           bookingPrice.price = this.card.fixedPrice;
+        } else {
+          this.card = undefined;
         }
       }
       if (this.foodCoupons?.length) {
@@ -491,7 +495,10 @@ export class Booking extends TimeStamps {
             });
           }
           if (coupon.discountPrice) {
-            if (!coupon.overPrice || bookingPrice.price >= coupon.overPrice) {
+            if (
+              !coupon.overPrice ||
+              (bookingPrice.nonSpecialOfferPrice || 0) >= coupon.overPrice
+            ) {
               bookingPrice.price = +(
                 bookingPrice.price - coupon.discountPrice
               ).toFixed(2);
@@ -510,7 +517,6 @@ export class Booking extends TimeStamps {
     if (bookingPrice.price < 0) {
       bookingPrice.price = 0;
     }
-
     return bookingPrice;
   }
 
@@ -675,7 +681,12 @@ export class Booking extends TimeStamps {
     let extraPayAmount = +(totalPayAmount - balancePayAmount).toFixed(2);
     // console.log(`[PAY] Extra payment amount is ${extraPayAmount}`);
 
-    if (this.card?.type === "coupon" && this.card.overPrice && !this.tableId) {
+    if (
+      this.card?.type === "coupon" &&
+      this.card.overPrice &&
+      !this.tableId &&
+      !this.pagerId
+    ) {
       extraPayAmount = 0;
     }
 
