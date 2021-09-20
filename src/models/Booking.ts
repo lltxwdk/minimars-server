@@ -134,9 +134,11 @@ class FoodItem {
   if (!this.card) this.card = undefined;
   if (this.type === Scene.FOOD && this.items && this.isModified("items")) {
     const store = storeMap[this.store?.id || ""];
-    if (!store || !store.customerFoodMenu)
-      throw new Error("invalid_food_booking_store_menu");
-    const menu = store.customerFoodMenu;
+    if (!store) throw new Error("invalid_food_booking_store");
+    const menu = store.getCustomerFoodMenu();
+    if (!menu) {
+      throw new Error("invalid_food_booking_menu");
+    }
     this.items.forEach(item => {
       const matchCategory = menu.find(cat => {
         const product = cat.products.find(p => p.uid === item.productUid);

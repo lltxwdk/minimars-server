@@ -138,7 +138,7 @@ export class Store {
   @prop({ type: Object, select: false })
   foodMenu?: Menu;
 
-  get customerFoodMenu() {
+  getCustomerFoodMenu(role?: "cashier") {
     if (!this.foodMenu) return undefined;
     this.foodMenu.forEach(cat => {
       cat.products.forEach(product => {
@@ -150,15 +150,28 @@ export class Store {
         }
       });
     });
+    const skipCatParentUids: string[] = [];
     const menu = this.foodMenu
       .map(cat => ({
         ...cat,
         order: config.foodMenuOrder?.[cat.name] || 0
       }))
       .filter(cat => {
-        if (cat.order < 0) return;
+        if (!role && cat.order < 0) return;
+        if (role === "cashier" && cat.order <= -2) {
+          skipCatParentUids.push(cat.uid);
+          return;
+        }
+        if (skipCatParentUids.includes(cat.parentUid.toString())) {
+          skipCatParentUids.push(cat.uid);
+          return;
+        }
         cat.products = cat.products
-          .filter(p => p.enable && p.sellPrice > 0 && p.stock > 0)
+          .filter(
+            p =>
+              p.enable &&
+              (role === "cashier" || (p.sellPrice > 0 && p.stock > 0))
+          )
           .map(p => ({
             uid: p.uid,
             categoryUid: p.categoryUid,

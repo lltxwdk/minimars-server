@@ -279,7 +279,10 @@ export default (router: Router) => {
           ) {
             throw new HttpError(
               400,
-              `抱歉，今日点单已于${booking.store.finalFoodOrderTime}结束`
+              `抱歉，今日点单已于${booking.store.finalFoodOrderTime.substr(
+                0,
+                5
+              )}结束`
             );
           }
         }
@@ -395,7 +398,7 @@ export default (router: Router) => {
             const matchCustomers = await UserModel.find({
               $text: { $search: queryParams.customerKeyword }
             });
-            query.where({ customer: { $in: matchCustomers } });
+            query.where({ customer: { $in: matchCustomers.map(c => c.id) } });
           }
         }
 

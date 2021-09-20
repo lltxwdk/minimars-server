@@ -84,7 +84,12 @@ export default (router: Router) => {
     // get the store with that id
     .get(
       handleAsyncErrors(async (req: Request, res: Response) => {
-        const store = req.item;
+        const store = req.item as DocumentType<Store>;
+        if (store.foodMenu) {
+          store.foodMenu = store.getCustomerFoodMenu(
+            req.user.role && "cashier"
+          );
+        }
         res.json(store);
       })
     )
@@ -168,10 +173,9 @@ export default (router: Router) => {
           store.foodMenu = menu;
           await store.save();
         }
-        const menu = store.customerFoodMenu;
+        const menu = store.getCustomerFoodMenu();
         const storeObject = store.toJSON();
         delete storeObject.foodMenu;
-        delete storeObject.customerFoodMenu;
         res.json({
           store: storeObject,
           tableId,
