@@ -447,9 +447,7 @@ export class Booking extends TimeStamps {
         if (!this.populated("card")) {
           await this.populate("card").execPopulate();
         }
-        if (this.price) {
-          bookingPrice.price = this.price;
-        }
+
         if (
           this.card.type === "coupon" &&
           (!this.card.overPrice ||
@@ -463,6 +461,8 @@ export class Booking extends TimeStamps {
           }
         } else if (this.card.type === "coupon" && this.card.fixedPrice) {
           bookingPrice.price = this.card.fixedPrice;
+        } else if (this.price) {
+          bookingPrice.price = this.price;
         } else {
           this.card = undefined;
         }
