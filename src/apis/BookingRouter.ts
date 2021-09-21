@@ -74,12 +74,14 @@ export default (router: Router) => {
           await booking.populate("customer").execPopulate();
         }
 
-        if (!booking.customer) {
+        if (!booking.customer && booking.type !== Scene.FOOD) {
           throw new HttpError(400, "客户信息错误");
         }
 
         console.log(
-          `[BOK] Create ${booking.id} for customer ${booking.customer.mobile} ${booking.customer.id}.`
+          `[BOK] Create ${booking.id} for customer ${
+            booking.customer?.mobile || "unknown"
+          } ${booking.customer?.id || "unknown"}.`
         );
 
         if (req.user.role && req.user.store) {
@@ -106,7 +108,7 @@ export default (router: Router) => {
           }
         }
 
-        if (!req.user.role && !booking.customer.equals(req.user)) {
+        if (!req.user.role && !booking.customer?.equals(req.user)) {
           throw new HttpError(403, "只能为自己预订");
         }
 
@@ -255,7 +257,7 @@ export default (router: Router) => {
           }
           if (
             booking.gift.isProfileCover &&
-            booking.customer.covers.map(c => c.id).includes(booking.gift.id)
+            booking.customer?.covers.map(c => c.id).includes(booking.gift.id)
           ) {
             throw new HttpError(400, "客户已经拥有这个封面");
           }
@@ -287,7 +289,7 @@ export default (router: Router) => {
           }
         }
 
-        if (booking.customer.isNew) {
+        if (booking.customer?.isNew) {
           await booking.customer.save();
         }
         await booking.save();
@@ -299,7 +301,7 @@ export default (router: Router) => {
             booking.type === Scene.FOOD &&
             booking.card &&
             query.useBalance !== "false" &&
-            booking.customer.balance
+            booking.customer?.balance
           ) {
             throw new HttpError(400, "禁止使用优惠券同时扣余额");
           }
@@ -324,7 +326,7 @@ export default (router: Router) => {
                   : undefined,
               atReception:
                 !req.user.can(Permission.BOOKING_ALL_STORE) &&
-                booking.customer.id !== req.user.id
+                booking.customer?.id !== req.user.id
             },
             paymentGateway === PaymentGateway.Points ? 0 : bookingPrice.price,
             bookingPrice.priceInPoints
