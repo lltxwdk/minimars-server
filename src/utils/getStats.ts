@@ -39,7 +39,7 @@ export default async (
       ]
     }
   }).select(
-    "type kidsCount adultsCount amountPaid amountPaidInBalance amountPaidInCard card coupon tableId"
+    "type kidsCount adultsCount amountPaid amountPaidInBalance amountPaidInCard card coupon foodCoupons tableId items.quantity items.productCategory"
   );
 
   if (store) {
@@ -82,7 +82,8 @@ export default async (
       "event",
       "gift",
       popBookingCardCoupon || "card",
-      popBookingCardCoupon || "coupon"
+      popBookingCardCoupon || "coupon",
+      popBookingCardCoupon || "foodCoupons"
     ]
   });
   paymentsQuery.setOptions({ skipAutoPopulationPaths: ["customer"] });
@@ -349,6 +350,20 @@ export default async (
   const cardsSellRenewTimesCount = cards.filter(c => c.isRenewTimes).length;
   const cardsSellFirstTimesCount = cards.filter(c => c.isFirstTimes).length;
 
+  const foodSetsCount = bookings.reduce((total, booking) => {
+    if (booking.items) {
+      total += booking.items
+        .filter(i => i.productCategory === "Mars超值套餐")
+        .reduce((t, i) => t + i.quantity, 0);
+    }
+    if (booking.foodCoupons?.length) {
+      total += booking.foodCoupons.filter(
+        coupon => coupon.scene === Scene.FOOD && coupon.type === "set"
+      ).length;
+    }
+    return total;
+  }, 0);
+
   const dailyBookingsCondition: Record<string, any> = {
     date: { $gte: dateRangeStartStr, $lte: dateEndStr }
   };
@@ -541,6 +556,7 @@ export default async (
     cardsSellCount,
     cardsSellFirstTimesCount,
     cardsSellRenewTimesCount,
+    foodSetsCount,
     dailyCustomers,
     dailyFlowAmount,
     dailyRevenue

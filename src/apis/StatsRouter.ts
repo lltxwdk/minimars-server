@@ -176,7 +176,7 @@ export default (router: Router) => {
       }
       await Promise.all(
         stores.map(async store => {
-          const stats = await getStats(date, dateEnd || date, store.id);
+          const stats = await getStats(date, dateEnd || date, store.id, true);
           const timesCardSellAmount = stats.cardsSellCount
             .filter(item => item.type === "times" && !item.isContract)
             .reduce((sum, item) => +(sum + item.amount).toFixed(2), 0);
@@ -225,7 +225,8 @@ export default (router: Router) => {
             foodBookingAvgAmount: +(
               stats.amountByScenes.food / stats.bookingsCountByType.food
             ).toFixed(2),
-            eventBookingsCount: stats.bookingsCountByType.event || 0
+            eventBookingsCount: stats.bookingsCountByType.event || 0,
+            foodSetsCount: stats.foodSetsCount || 0
           } as Record<string, any>;
 
           for (const field in storeValues) {
