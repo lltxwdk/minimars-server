@@ -5,7 +5,6 @@ import moment from "moment";
 import JSONBigInt from "json-bigint";
 import userModel, { User } from "../models/User";
 import { Booking } from "../models/Booking";
-import { PaymentGateway } from "../models/Payment";
 import StoreModel from "../models/Store";
 
 export interface Ticket {
@@ -72,7 +71,7 @@ interface Member {
   enable: number;
 }
 
-interface Category {
+export interface Category {
   uid: string;
   parentUid: number;
   name: string;

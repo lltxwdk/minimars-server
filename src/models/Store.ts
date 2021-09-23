@@ -18,7 +18,7 @@ import {
 } from "../utils/imageResize";
 import { sleep } from "../utils/helper";
 import BookingModel, { BookingStatus } from "./Booking";
-import Pospal, { Ticket, Menu } from "../utils/pospal";
+import Pospal, { Ticket, Menu, Category } from "../utils/pospal";
 import PaymentModel, { PaymentGateway, Scene } from "./Payment";
 import UserModel from "./User";
 import WebSocket from "ws";
@@ -150,20 +150,32 @@ export class Store {
         }
       });
     });
-    const skipCatParentUids: string[] = [];
-    const menu = this.foodMenu
-      .map(cat => ({
-        ...cat,
-        order: config.foodMenuOrder?.[cat.name] || 0
-      }))
-      .filter(cat => {
-        if (!role && cat.order < 0) return;
-        if (role === "cashier" && cat.order <= -2) {
-          skipCatParentUids.push(cat.uid);
-          return;
+    let skipCatUids: string[] = [];
+    const foodMenuWithOrder = this.foodMenu.map(cat => ({
+      ...cat,
+      order: config.foodMenuOrder?.[cat.name] || 0
+    }));
+    function gatherSkipCatUids(cats: (Category & { order: number })[]) {
+      const skipUidsFound: string[] = [];
+      cats.forEach(cat => {
+        if (skipCatUids.includes(cat.uid)) return;
+        if (!role && cat.order < 0) {
+          skipUidsFound.push(cat.uid);
+        } else if (role === "cashier" && cat.order <= -2) {
+          skipUidsFound.push(cat.uid);
+        } else if (skipCatUids.includes(cat.parentUid.toString())) {
+          skipUidsFound.push(cat.uid);
         }
-        if (skipCatParentUids.includes(cat.parentUid.toString())) {
-          skipCatParentUids.push(cat.uid);
+      });
+      if (skipUidsFound.length) {
+        skipCatUids = skipCatUids.concat(skipUidsFound);
+        gatherSkipCatUids(cats);
+      }
+    }
+    gatherSkipCatUids(foodMenuWithOrder);
+    const menu = foodMenuWithOrder
+      .filter(cat => {
+        if (skipCatUids.includes(cat.uid)) {
           return;
         }
         cat.products = cat.products
