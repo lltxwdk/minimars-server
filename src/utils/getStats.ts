@@ -7,6 +7,7 @@ import PaymentModel, {
 } from "../models/Payment";
 import CardModel, { CardStatus } from "../models/Card";
 import { Types } from "mongoose";
+import HttpError from "./HttpError";
 
 export default async (
   dateInput?: string | Date,
@@ -29,6 +30,15 @@ export default async (
     dateRangeStart = dateEndInput
       ? moment(dateInput).toDate()
       : moment(dateInput).subtract(6, "days").startOf("day").toDate();
+  if (
+    popBookingCardCoupon &&
+    moment(endOfDay).diff(startOfDay, "days", true) > 7
+  ) {
+    popBookingCardCoupon = false;
+  }
+  if (moment(endOfDay).diff(startOfDay, "months", true) > 1) {
+    throw new HttpError(400, "受系统性能限制，实时计算最大查询范围为1个月");
+  }
   const bookingsQuery = BookingModel.find({
     date: { $gte: dateStr, $lte: dateEndStr },
     status: {
