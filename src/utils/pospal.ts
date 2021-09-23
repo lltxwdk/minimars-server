@@ -537,12 +537,8 @@ export default class Pospal {
       pi.imageUrl = pi.imageUrl.replace(/https?:\/\/.*?\//, cdnBase);
     });
 
-    const openProducts = products.filter(
-      p => p.enable && p.sellPrice > 0 && p.stock > 0
-    );
-
     const extraInfos = await this.queryProductOtherInfoByUids(
-      openProducts.map(p => p.uid)
+      products.map(p => p.uid)
     );
 
     const menu = categories.map(c => ({
