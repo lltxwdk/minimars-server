@@ -496,9 +496,16 @@ export default class Pospal {
   }
 
   async queryProductOtherInfoByUids(productUids: string[]) {
-    return (await this.post("productOpenApi/queryProducOtherInfotByUids", {
-      productUids
-    })) as ProductOtherInfo[];
+    const maxProductUids = 200;
+    let results: ProductOtherInfo[] = [];
+    for (let i = 0; i < productUids.length; i += maxProductUids) {
+      results = results.concat(
+        await this.post("productOpenApi/queryProducOtherInfotByUids", {
+          productUids: productUids.slice(i, i + maxProductUids)
+        })
+      );
+    }
+    return results;
   }
 
   async queryAllProductAttributePackage() {
@@ -534,12 +541,6 @@ export default class Pospal {
     const openProducts = products.filter(
       p => p.enable && p.sellPrice > 0 && p.stock > 0
     );
-
-    if (openProducts.length > 200) {
-      console.error(
-        `[PSP${this.storeCode}] too many open products, may cause incomplete flavor data, ${openProducts.length} found.`
-      );
-    }
 
     const extraInfos = await this.queryProductOtherInfoByUids(
       openProducts.map(p => p.uid)
