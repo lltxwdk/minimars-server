@@ -633,7 +633,7 @@ export default class Pospal {
 
   async addOnlineOrder(booking: DocumentType<Booking>): Promise<void> {
     if (!booking.items) throw new Error("missing_food_items");
-    if (!booking.customer) throw new Error("food_booking_missing_customer");
+    // if (!booking.customer) throw new Error("food_booking_missing_customer");
     if (!booking.tableId && !booking.pagerId)
       throw new Error("missing_table_pager_id");
 
@@ -675,12 +675,12 @@ export default class Pospal {
 
     const data: Record<string, any> = {
       payMethod: "payCode_17",
-      customerNumber: booking.customer.pospalId,
+      customerNumber: booking.customer?.pospalId,
       orderDateTime: moment(booking.createdAt).format("YYYY-MM-DD HH:mm:ss"),
       // orderNo: booking.id,
       contactAddress: "-",
-      contactName: booking.customer.name || "-",
-      contactTel: booking.customer.mobile || "-",
+      contactName: booking.customer?.name || "-",
+      contactTel: booking.customer?.mobile || "-",
       deliveryType: 1,
       payOnLine: 1,
       // dinnersNumber:3 // 就餐人数
