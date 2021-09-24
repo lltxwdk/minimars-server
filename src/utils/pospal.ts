@@ -562,20 +562,23 @@ export default class Pospal {
       );
       cat.products = catProducts.map(p => {
         const productImage = productImages.find(pi => pi.productUid === p.uid);
-        if (!productImage) return p;
-        const extraInfo = extraInfos.find(i => i.productUid === p.uid);
-        const productWithImage = Object.assign({}, p, {
-          imageUrl: productImage.imageUrl,
-          productBarcode: productImage.productBarcode
-        });
+        if (productImage) {
+          Object.assign(p, {
+            imageUrl: productImage.imageUrl,
+            productBarcode: productImage.productBarcode
+          });
+        }
 
-        if (!extraInfo) return productWithImage;
+        const extraInfo = extraInfos.find(i => i.productUid === p.uid);
+
+        if (!extraInfo) return p;
 
         const unitName = extraInfo.unitName;
         const tags = extraInfo.tagNames;
 
         if (!extraInfo.attributes) {
-          return { ...productWithImage, unitName, tags };
+          Object.assign(p, { unitName, tags });
+          return p;
         }
 
         const productAttributes = extraInfo.attributes
@@ -621,7 +624,8 @@ export default class Pospal {
           return groups;
         }, [] as FlavorGroup[]);
 
-        return { ...productWithImage, unitName, tags, flavorGroups };
+        Object.assign(p, { flavorGroups });
+        return p;
       });
     });
     return menu;
