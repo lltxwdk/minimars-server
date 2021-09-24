@@ -148,6 +148,9 @@ export class Store {
         ) {
           product.isSpecialOffer = true;
         }
+        if (!role && product.tags) {
+          product.tags = product.tags.filter(t => !t.match(/菜单/));
+        }
       });
     });
     let skipCatUids: string[] = [];
